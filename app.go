@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/MVPWorkshop/legaler-bc/x/legaler"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -25,8 +24,6 @@ type legalerApp struct {
 
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
-	keyLegalerNames  *sdk.KVStoreKey
-	keyLegalerOwners *sdk.KVStoreKey
 	keyFeeCollection *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
 	tkeyParams       *sdk.TransientStoreKey
@@ -34,7 +31,6 @@ type legalerApp struct {
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	paramsKeeper        params.Keeper
-	legalerKeeper       legaler.Keeper
 }
 
 func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
@@ -51,8 +47,6 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 
 		keyMain:          sdk.NewKVStoreKey("main"),
 		keyAccount:       sdk.NewKVStoreKey("acc"),
-		keyLegalerNames:  sdk.NewKVStoreKey("legaler_names"),
-		keyLegalerOwners: sdk.NewKVStoreKey("legaler_owners"),
 		keyFeeCollection: sdk.NewKVStoreKey("fee_collection"),
 		keyParams:        sdk.NewKVStoreKey("params"),
 		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
@@ -72,24 +66,8 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 	// The FeeCollectionKeeper collects transaction fees and renders them to the fee distribution module
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(cdc, app.keyFeeCollection)
 
-	// LegalerKeeper handles interactions with the legaler
-	app.legalerKeeper = legaler.NewKeeper(
-		app.keyLegalerNames,
-		app.keyLegalerOwners,
-		app.cdc,
-	)
-
 	// The AnteHandler handles signature verification and transaction pre-processing
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
-
-	// The app.Router is the main transaction router where each module registers its routes
-	// Register the legaler route here
-	app.Router().
-		AddRoute("legaler", legaler.NewHandler(app.legalerKeeper))
-
-	// The app.QueryRouter is the main query router where each module registers its routes
-	app.QueryRouter().
-		AddRoute("legaler", legaler.NewQuerier(app.legalerKeeper))
 
 	// The initChainer handles translating the genesis.json file into initial state for the network
 	app.SetInitChainer(app.initChainer)
@@ -97,8 +75,6 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 	app.MountStores(
 		app.keyMain,
 		app.keyAccount,
-		app.keyLegalerNames,
-		app.keyLegalerOwners,
 		app.keyFeeCollection,
 		app.keyParams,
 	)
@@ -172,7 +148,6 @@ func (app *legalerApp) ExportAppStateAndValidators() (appState json.RawMessage, 
 func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
 	auth.RegisterCodec(cdc)
-	legaler.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)

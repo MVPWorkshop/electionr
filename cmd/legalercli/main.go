@@ -16,8 +16,6 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
-	legalerclient "github.com/MVPWorkshop/legaler-bc/x/legaler/client"
-	legalerrest "github.com/MVPWorkshop/legaler-bc/x/legaler/client/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
@@ -27,7 +25,6 @@ import (
 
 const (
 	storeAcc = "acc"
-	storeNS  = "legaler"
 )
 
 var defaultCLIHome = os.ExpandEnv("$HOME/.lecli")
@@ -44,10 +41,6 @@ func main() {
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 	config.Seal()
 
-	mc := []sdk.ModuleClients{
-		legalerclient.NewModuleClient(storeNS, cdc),
-	}
-
 	rootCmd := &cobra.Command{
 		Use:   "legalercli",
 		Short: "legaler Client",
@@ -63,8 +56,8 @@ func main() {
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		client.ConfigCmd(),
-		queryCmd(cdc, mc),
-		txCmd(cdc, mc),
+		queryCmd(cdc),
+		txCmd(cdc),
 		client.LineBreak,
 		lcd.ServeCommand(cdc, registerRoutes),
 		client.LineBreak,
@@ -87,10 +80,9 @@ func registerRoutes(rs *lcd.RestServer) {
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
 	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	legalerrest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeNS)
 }
 
-func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+func queryCmd(cdc *amino.Codec) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:     "query",
 		Aliases: []string{"q"},
@@ -106,14 +98,10 @@ func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 		authcmd.GetAccountCmd(storeAcc, cdc),
 	)
 
-	for _, m := range mc {
-		queryCmd.AddCommand(m.GetQueryCmd())
-	}
-
 	return queryCmd
 }
 
-func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
+func txCmd(cdc *amino.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   "tx",
 		Short: "Transactions subcommands",
@@ -126,10 +114,6 @@ func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 		bankcmd.GetBroadcastCommand(cdc),
 		client.LineBreak,
 	)
-
-	for _, m := range mc {
-		txCmd.AddCommand(m.GetTxCmd())
-	}
 
 	return txCmd
 }
