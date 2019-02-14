@@ -26,7 +26,7 @@
 
 [[constraint]]
   name = "github.com/cosmos/cosmos-sdk"
-  revision = "3864d5b1bd9d7081fb5f8bc3f9a014e9a0462756"
+  revision = "v0.31.2"
 
 [[override]]
   name = "github.com/golang/protobuf"
@@ -50,7 +50,7 @@
 
 [[override]]
   name = "github.com/tendermint/tendermint"
-  version = "v0.29.0"
+  version = "v0.30.0"
 
 [[override]]
   name = "golang.org/x/crypto"

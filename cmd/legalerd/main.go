@@ -30,7 +30,7 @@ func main() {
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 
-	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
+	server.AddCommands(ctx, cdc, rootCmd, newApp, appExporter())
 
 	// prepare and add flags
 	executor := cli.PrepareBaseCmd(rootCmd, "LE", DefaultNodeHome)
@@ -45,8 +45,9 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 	return app.NewLegalerApp(logger, db)
 }
 
-func exportAppStateAndTMValidators(logger log.Logger, db dbm.DB, _ io.Writer, _ int64, _ bool) (
-	json.RawMessage, []tmtypes.GenesisValidator, error) {
-	dapp := app.NewLegalerApp(logger, db)
-	return dapp.ExportAppStateAndValidators()
+func appExporter() server.AppExporter {
+	return func(logger log.Logger, db dbm.DB, _ io.Writer, _ int64, _ bool, _ []string) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+		dapp := app.NewLegalerApp(logger, db)
+		return dapp.ExportAppStateAndValidators()
+	}
 }

@@ -2,18 +2,21 @@ package app
 
 import (
 	"encoding/json"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/tendermint/tendermint/libs/log"
-
-	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+	"sort"
 )
 
 const appName = "legaler"
@@ -25,12 +28,20 @@ type legalerApp struct {
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
 	keyFeeCollection *sdk.KVStoreKey
+	keyStake         *sdk.KVStoreKey
+	tkeyStake        *sdk.TransientStoreKey
+	keyMint          *sdk.KVStoreKey
+	keyDistribution  *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
 	tkeyParams       *sdk.TransientStoreKey
 
 	accountKeeper       auth.AccountKeeper
 	feeCollectionKeeper auth.FeeCollectionKeeper
 	paramsKeeper        params.Keeper
+	bankKeeper          bank.Keeper
+	mintKeeper          mint.Keeper
+	distributionKeeper  distribution.Keeper
+	stakingKeeper       staking.Keeper
 }
 
 func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
@@ -48,6 +59,10 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 		keyMain:          sdk.NewKVStoreKey("main"),
 		keyAccount:       sdk.NewKVStoreKey("acc"),
 		keyFeeCollection: sdk.NewKVStoreKey("fee_collection"),
+		keyStake:         sdk.NewKVStoreKey("stake"),
+		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
+		keyMint:          sdk.NewKVStoreKey("mint"),
+		keyDistribution:  sdk.NewKVStoreKey("distribution"),
 		keyParams:        sdk.NewKVStoreKey("params"),
 		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
 	}
@@ -66,20 +81,68 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 	// The FeeCollectionKeeper collects transaction fees and renders them to the fee distribution module
 	app.feeCollectionKeeper = auth.NewFeeCollectionKeeper(cdc, app.keyFeeCollection)
 
+	// The BankKeeper allows you to perform sdk.Coins interactions
+	app.bankKeeper = bank.NewBaseKeeper(
+		app.accountKeeper,
+		app.paramsKeeper.Subspace(bank.DefaultParamspace),
+		bank.DefaultCodespace,
+	)
+
+	stakeKeeper := staking.NewKeeper(
+		app.cdc,
+		app.keyStake,
+		app.tkeyStake,
+		app.bankKeeper,
+		app.paramsKeeper.Subspace(staking.DefaultParamspace),
+		staking.DefaultCodespace,
+	)
+
+	app.mintKeeper = mint.NewKeeper(
+		app.cdc,
+		app.keyMint,
+		app.paramsKeeper.Subspace(mint.DefaultParamspace),
+		&stakeKeeper,
+		app.feeCollectionKeeper,
+	)
+
+	app.distributionKeeper = distribution.NewKeeper(
+		app.cdc,
+		app.keyDistribution,
+		app.paramsKeeper.Subspace(distribution.DefaultParamspace),
+		app.bankKeeper,
+		&stakeKeeper,
+		app.feeCollectionKeeper,
+		distribution.DefaultCodespace,
+	)
+
+	app.stakingKeeper = stakeKeeper
+
+	// The app.Router is the main transaction router where each module registers its routes
+	app.Router().
+		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
+		AddRoute("distribution", distribution.NewHandler(app.distributionKeeper)).
+		AddRoute("staking", staking.NewHandler(app.stakingKeeper))
+
+	// Initialize BaseApp
+	app.MountStores(
+		app.keyMain,
+		app.keyAccount,
+		app.keyFeeCollection,
+		app.keyStake,
+		app.tkeyStake,
+		app.keyMint,
+		app.keyDistribution,
+		app.keyParams,
+		app.tkeyParams,
+	)
+
 	// The AnteHandler handles signature verification and transaction pre-processing
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 
 	// The initChainer handles translating the genesis.json file into initial state for the network
 	app.SetInitChainer(app.initChainer)
-
-	app.MountStores(
-		app.keyMain,
-		app.keyAccount,
-		app.keyFeeCollection,
-		app.keyParams,
-	)
-
-	app.MountStoresTransient(app.tkeyParams)
+	//app.SetBeginBlocker(app.BeginBlocker)
+	//app.SetEndBlocker(app.EndBlocker)
 
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {
@@ -91,8 +154,11 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 
 // GenesisState represents chain state at the start of the chain. Any initial state (account balances) are stored here.
 type GenesisState struct {
-	AuthData auth.GenesisState   `json:"auth"`
-	Accounts []*auth.BaseAccount `json:"accounts"`
+	AuthData         auth.GenesisState         `json:"auth"`
+	Accounts         []*auth.BaseAccount       `json:"accounts"`
+	StakeData        staking.GenesisState      `json:"stake"`
+	MintData         mint.GenesisState         `json:"mint"`
+	DistributionData distribution.GenesisState `json:"distr"`
 }
 
 // The initChainer defines how accounts in genesis.json are mapped into the application state on initial chain start.
@@ -110,9 +176,51 @@ func (app *legalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) a
 		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
-	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
+	validators := app.initFromGenesisState(ctx, *genesisState)
 
-	return abci.ResponseInitChain{}
+	return abci.ResponseInitChain{Validators: validators}
+}
+
+func (app *legalerApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	mint.BeginBlocker(ctx, app.mintKeeper)
+	distribution.BeginBlocker(ctx, req, app.distributionKeeper)
+	return abci.ResponseBeginBlock{}
+}
+
+func (app *legalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)
+
+	return abci.ResponseEndBlock{
+		ValidatorUpdates: validatorUpdates,
+		Tags:             tags,
+	}
+}
+
+// Inistialize store from a genesis state
+func (app *legalerApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
+	// Sort by account number to maintain consistency
+	sort.Slice(genesisState.Accounts, func(i, j int) bool {
+		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
+	})
+
+	// Load the accounts (BaseAccount for now)
+	for _, acc := range genesisState.Accounts {
+		acc.AccountNumber = app.accountKeeper.GetNextAccountNumber(ctx)
+		app.accountKeeper.SetAccount(ctx, acc)
+	}
+
+	// Load the initial stake information
+	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakeData)
+	if err != nil {
+		panic(err) // TODO: Do this without panic
+	}
+
+	// Initialize module-specific stores
+	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
+	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
+	distribution.InitGenesis(ctx, app.distributionKeeper, genesisState.DistributionData)
+
+	return validators
 }
 
 // The ExportAppStateAndValidators function helps bootstrap the initial state for application.
@@ -149,6 +257,8 @@ func MakeCodec() *codec.Codec {
 	var cdc = codec.New()
 	auth.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
+	bank.RegisterCodec(cdc)
+	distribution.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	return cdc
