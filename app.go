@@ -28,8 +28,8 @@ type legalerApp struct {
 	keyMain          *sdk.KVStoreKey
 	keyAccount       *sdk.KVStoreKey
 	keyFeeCollection *sdk.KVStoreKey
-	keyStake         *sdk.KVStoreKey
-	tkeyStake        *sdk.TransientStoreKey
+	keyStaking       *sdk.KVStoreKey
+	tkeyStaking      *sdk.TransientStoreKey
 	keyMint          *sdk.KVStoreKey
 	keyDistribution  *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
@@ -56,15 +56,15 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 		BaseApp: bApp,
 		cdc:     cdc,
 
-		keyMain:          sdk.NewKVStoreKey("main"),
-		keyAccount:       sdk.NewKVStoreKey("acc"),
-		keyFeeCollection: sdk.NewKVStoreKey("fee_collection"),
-		keyStake:         sdk.NewKVStoreKey("stake"),
-		tkeyStake:        sdk.NewTransientStoreKey("transient_stake"),
-		keyMint:          sdk.NewKVStoreKey("mint"),
-		keyDistribution:  sdk.NewKVStoreKey("distribution"),
-		keyParams:        sdk.NewKVStoreKey("params"),
-		tkeyParams:       sdk.NewTransientStoreKey("transient_params"),
+		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
+		keyFeeCollection: sdk.NewKVStoreKey(auth.FeeStoreKey),
+		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking:      sdk.NewTransientStoreKey(staking.TStoreKey),
+		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
+		keyDistribution:  sdk.NewKVStoreKey(distribution.StoreKey),
+		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
+		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
 	// The ParamsKeeper handles parameter storage for the application
@@ -90,8 +90,8 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 
 	stakeKeeper := staking.NewKeeper(
 		app.cdc,
-		app.keyStake,
-		app.tkeyStake,
+		app.keyStaking,
+		app.tkeyStaking,
 		app.bankKeeper,
 		app.paramsKeeper.Subspace(staking.DefaultParamspace),
 		staking.DefaultCodespace,
@@ -119,17 +119,22 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 
 	// The app.Router is the main transaction router where each module registers its routes
 	app.Router().
-		AddRoute("bank", bank.NewHandler(app.bankKeeper)).
-		AddRoute("distribution", distribution.NewHandler(app.distributionKeeper)).
-		AddRoute("staking", staking.NewHandler(app.stakingKeeper))
+		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
+		AddRoute(distribution.RouterKey, distribution.NewHandler(app.distributionKeeper)).
+		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper))
+
+	// Register query routes
+	app.QueryRouter().
+		AddRoute(distribution.QuerierRoute, distribution.NewQuerier(app.distributionKeeper)).
+		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc))
 
 	// Initialize BaseApp
 	app.MountStores(
 		app.keyMain,
 		app.keyAccount,
 		app.keyFeeCollection,
-		app.keyStake,
-		app.tkeyStake,
+		app.keyStaking,
+		app.tkeyStaking,
 		app.keyMint,
 		app.keyDistribution,
 		app.keyParams,
