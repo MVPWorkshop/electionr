@@ -40,7 +40,7 @@
   revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
-  digest = "1:2ea0100e62bb008c85998feea43e2c851f7ff12c9f1d216f7bd2f30ca3e524dc"
+  digest = "1:bbeebc263f2e5b453fed4a74d18604acf367b2801e584c3c6e8d4e36d696da34"
   name = "github.com/cosmos/cosmos-sdk"
   packages = [
     "baseapp",
@@ -87,6 +87,8 @@
     "x/bank/client/rest",
     "x/bank/simulation",
     "x/distribution",
+    "x/distribution/client",
+    "x/distribution/client/cli",
     "x/distribution/client/common",
     "x/distribution/client/rest",
     "x/distribution/keeper",
@@ -106,6 +108,8 @@
     "x/slashing/client/rest",
     "x/slashing/tags",
     "x/staking",
+    "x/staking/client",
+    "x/staking/client/cli",
     "x/staking/client/rest",
     "x/staking/keeper",
     "x/staking/querier",
@@ -210,11 +214,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4a0c6bb4805508a6287675fac876be2ac1182539ca8a32468d8128882e9d5009"
+  digest = "1:e4f5819333ac698d294fe04dbf640f84719658d5c7ce195b10060cc37292ce79"
   name = "github.com/golang/snappy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
+  revision = "2a8bb927dd31d8daada140a5d09578521ce5c36a"
 
 [[projects]]
   digest = "1:ca59b1175189b3f0e9f1793d2c350114be36eaabbe5b9f554b35edee1de50aea"
@@ -644,14 +648,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:83552c87ddffa6a9095b7b4a005fcb8d35ff05108246b247a8bbddc78a91db64"
+  digest = "1:c0d028f9873255bac3cfaa3915499ae0ed186d21d6ab558ca6378f9429854ce5"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
     "unix",
   ]
   pruneopts = "UT"
-  revision = "983097b1a8a340cd1cc7df17d735154d89e10b1a"
+  revision = "153ac476189d567564fda94622d7a8c0fb338f6b"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -682,7 +686,7 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "4b09977fb92221987e99d190c8f88f2c92727a29"
+  revision = "bd968387e4aa590b3c6e4ba38ecac1ed314d43ad"
 
 [[projects]]
   digest = "1:9ab5a33d8cb5c120602a34d2e985ce17956a4e8c2edce7e6961568f95e40c09a"
@@ -753,10 +757,13 @@
     "github.com/cosmos/cosmos-sdk/x/bank/client/cli",
     "github.com/cosmos/cosmos-sdk/x/bank/client/rest",
     "github.com/cosmos/cosmos-sdk/x/distribution",
+    "github.com/cosmos/cosmos-sdk/x/distribution/client",
+    "github.com/cosmos/cosmos-sdk/x/distribution/client/rest",
     "github.com/cosmos/cosmos-sdk/x/mint",
     "github.com/cosmos/cosmos-sdk/x/params",
     "github.com/cosmos/cosmos-sdk/x/staking",
-    "github.com/cosmos/cosmos-sdk/x/staking/types",
+    "github.com/cosmos/cosmos-sdk/x/staking/client",
+    "github.com/cosmos/cosmos-sdk/x/staking/client/rest",
     "github.com/spf13/cobra",
     "github.com/spf13/viper",
     "github.com/tendermint/go-amino",

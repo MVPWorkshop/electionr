@@ -147,7 +147,7 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 	// The initChainer handles translating the genesis.json file into initial state for the network
 	app.SetInitChainer(app.initChainer)
 	//app.SetBeginBlocker(app.BeginBlocker)
-	//app.SetEndBlocker(app.EndBlocker)
+	app.SetEndBlocker(app.EndBlocker)
 
 	err := app.LoadLatestVersion(app.keyMain)
 	if err != nil {

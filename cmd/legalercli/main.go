@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"os"
 	"path"
 
@@ -19,11 +20,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
+	authRest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
-	distributionClient "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
+	bankRest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
+	distributionClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+	distributionRest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	stakingClient "github.com/cosmos/cosmos-sdk/x/staking/client"
+	stakingRest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 )
 
 const (
@@ -44,6 +47,13 @@ func main() {
 	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
 	config.Seal()
 
+	// Add existing commands of each module client
+	// Module clients hold cli commands (tx, query) and lcd routes
+	mc := []sdk.ModuleClients{
+		distributionClient.NewModuleClient(distribution.StoreKey, cdc),
+		stakingClient.NewModuleClient(staking.StoreKey, cdc),
+	}
+
 	rootCmd := &cobra.Command{
 		Use:   "legalercli",
 		Short: "legaler Client",
@@ -59,8 +69,8 @@ func main() {
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
 		client.ConfigCmd(defaultCLIHome),
-		queryCmd(cdc),
-		txCmd(cdc),
+		queryCmd(cdc, mc),
+		txCmd(cdc, mc),
 		client.LineBreak,
 		lcd.ServeCommand(cdc, registerRoutes),
 		client.LineBreak,
@@ -81,13 +91,13 @@ func registerRoutes(rs *lcd.RestServer) {
 	keys.RegisterRoutes(rs.Mux, rs.CliCtx.Indent)
 	rpc.RegisterRoutes(rs.CliCtx, rs.Mux)
 	tx.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
-	auth.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
-	bank.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
-	distributionClient.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distribution.StoreKey)
-	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	authRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, storeAcc)
+	bankRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	distributionRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distribution.StoreKey)
+	stakingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 }
 
-func queryCmd(cdc *amino.Codec) *cobra.Command {
+func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:     "query",
 		Aliases: []string{"q"},
@@ -103,10 +113,14 @@ func queryCmd(cdc *amino.Codec) *cobra.Command {
 		authcmd.GetAccountCmd(storeAcc, cdc),
 	)
 
+	for _, m := range mc {
+		queryCmd.AddCommand(m.GetQueryCmd())
+	}
+
 	return queryCmd
 }
 
-func txCmd(cdc *amino.Codec) *cobra.Command {
+func txCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:   "tx",
 		Short: "Transactions subcommands",
@@ -119,6 +133,10 @@ func txCmd(cdc *amino.Codec) *cobra.Command {
 		authcmd.GetBroadcastCommand(cdc),
 		client.LineBreak,
 	)
+
+	for _, m := range mc {
+		txCmd.AddCommand(m.GetTxCmd())
+	}
 
 	return txCmd
 }
