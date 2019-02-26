@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/MVPWorkshop/legaler-bc/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	"os"
 	"path"
 
@@ -18,6 +18,8 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	stakingClient "github.com/MVPWorkshop/legaler-bc/x/staking/client"
+	stakingRest "github.com/MVPWorkshop/legaler-bc/x/staking/client/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authRest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
@@ -25,8 +27,6 @@ import (
 	bankRest "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	distributionClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distributionRest "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
-	stakingClient "github.com/cosmos/cosmos-sdk/x/staking/client"
-	stakingRest "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 )
 
 const (
