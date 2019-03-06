@@ -21,3 +21,6 @@ update_vendor_deps:
 install:
 	go install ./cmd/legalerd
 	go install ./cmd/legalercli
+
+test:
+	go test ./...
