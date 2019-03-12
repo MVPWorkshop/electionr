@@ -203,7 +203,7 @@ func (app *legalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abc
 	}
 }
 
-// Inistialize store from a genesis state
+// Initialize store from a genesis state
 func (app *legalerApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
 	// Sort by account number to maintain consistency
 	sort.Slice(genesisState.Accounts, func(i, j int) bool {

@@ -18,6 +18,7 @@ import (
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
+	electionRest "github.com/MVPWorkshop/legaler-bc/x/election/client/rest"
 	stakingClient "github.com/MVPWorkshop/legaler-bc/x/staking/client"
 	stakingRest "github.com/MVPWorkshop/legaler-bc/x/staking/client/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +49,7 @@ func main() {
 	config.Seal()
 
 	// Add existing commands of each module client
-	// Module clients hold cli commands (tx, query) and lcd routes
+	// Module clients hold cli commands (tx, query)
 	mc := []sdk.ModuleClients{
 		distributionClient.NewModuleClient(distribution.StoreKey, cdc),
 		stakingClient.NewModuleClient(staking.StoreKey, cdc),
@@ -95,6 +96,7 @@ func registerRoutes(rs *lcd.RestServer) {
 	bankRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	distributionRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distribution.StoreKey)
 	stakingRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	electionRest.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 func queryCmd(cdc *amino.Codec, mc []sdk.ModuleClients) *cobra.Command {

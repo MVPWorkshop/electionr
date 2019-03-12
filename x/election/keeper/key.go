@@ -5,13 +5,13 @@ import (
 )
 
 var (
-	validatorCandidatesKey = []byte{0x61} // prefix for each key to a validator candidate
-	cycleKey = []byte{0x62} // prefix for each key to an election cycle
+	validatorElectsKey = []byte{0x61} // prefix for each key to a validator elect
+	cycleKey           = []byte{0x62} // prefix for each key to an election cycle
 )
 
-// Get the key for the validator candidate with address
-func getValidatorCandidateKey(operatorAddr sdk.ValAddress) []byte {
-	return append(validatorCandidatesKey, operatorAddr.Bytes()...)
+// Get the key for the validator elect with address
+func getValidatorElectKey(operatorAddr sdk.ValAddress) []byte {
+	return append(validatorElectsKey, operatorAddr.Bytes()...)
 }
 
 // Get the key for the cycle election with cycle number

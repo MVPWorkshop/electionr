@@ -5,10 +5,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const MaxCycles = 12
+
 type Cycle struct {
-	Num                 sdk.Int              // Cycle number
-	validatorCandidates []ValidatorCandidate // Both validator and standby validator candidates
-	NumVotes            sdk.Int              // Number of votes for this cycle election
+	Num             sdk.Int          // Cycle number
+	validatorElects []ValidatorElect // Both validator and standby validator elects
+	NumVotes        sdk.Int          // Number of votes for this cycle election
 }
 
 // Unmarshal election cycle from a store value
