@@ -1,12 +1,11 @@
 package rest
 
 import (
-	"github.com/MVPWorkshop/legaler-bc/x/election/types"
-	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/gorilla/mux"
-	"github.com/tendermint/tendermint/crypto"
 	"net/http"
 
+	"github.com/MVPWorkshop/legaler-bc/x/election"
+	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,13 +19,11 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 }
 
 type msgInsertValidatorElectsInput struct {
-	BaseReq      rest.BaseReq     `json:"base_req"`
-	PubKeys      []string         `json:"pub_keys"`
-	ValAddresses []sdk.ValAddress `json:"validator_addresses"` // Validator operator addresses
-	CycleNum     sdk.Int          `json:"cycle_num"`
+	BaseReq           rest.BaseReq              `json:"base_req"`
+	ElectedValidators []election.ValidatorElect `json:"elected_validators"`
+	CycleNum          sdk.Int                   `json:"cycle_number"`
 }
 
-// TODO: Probaj samo sa nizom adresa bez pubkeys
 func postInsertValidatorElectsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		var req msgInsertValidatorElectsInput
@@ -51,18 +48,11 @@ func postInsertValidatorElectsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 			return
 		}
 
-		// Get validator consensus public keys
-		pubKeys := make([]crypto.PubKey, types.MaxValidatorElectsPerCycle)
-		for _, pubKey := range req.PubKeys {
-			valPubKey, err := sdk.GetConsPubKeyBech32(pubKey)
-			if err != nil {
-				rest.WriteErrorResponse(writer, http.StatusBadRequest, err.Error())
-				return
-			}
-			pubKeys = append(pubKeys, valPubKey)
-		}
-
-		msg := types.NewMsgInsertValidatorElects(pubKeys, req.ValAddresses, sdk.ValAddress(fromAddress), req.CycleNum)
+		msg := election.NewMsgInsertValidatorElects(
+			req.ElectedValidators,
+			sdk.ValAddress(fromAddress),
+			req.CycleNum,
+		)
 
 		// Perform basic request validation
 		if err := msg.ValidateBasic(); err != nil {

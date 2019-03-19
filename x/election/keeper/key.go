@@ -1,20 +1,13 @@
 package keeper
 
-import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+import "github.com/MVPWorkshop/legaler-bc/x/election/types"
 
 var (
-	validatorElectsKey = []byte{0x61} // prefix for each key to a validator elect
-	cycleKey           = []byte{0x62} // prefix for each key to an election cycle
+	cycleKey = []byte{0x61} // prefix for each key to an election cycle
 )
 
-// Get the key for the validator elect with address
-func getValidatorElectKey(operatorAddr sdk.ValAddress) []byte {
-	return append(validatorElectsKey, operatorAddr.Bytes()...)
-}
-
-// Get the key for the cycle election with cycle number
-func getCycleKey(cycleNumber sdk.Int) []byte {
-	return append(cycleKey, cycleNumber.BigInt().Bytes()...)
+// Get the key for the cycle election with primary key
+func getCycleKey(primaryKey types.Hash) []byte {
+	// Convert primary key to byte slice, and unpack it
+	return append(cycleKey, primaryKey[:]...)
 }

@@ -7,9 +7,9 @@ import (
 )
 
 // Get single election cycle
-func (k Keeper) getCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle types.Cycle, found bool) {
+func (k Keeper) GetCycle(ctx sdk.Context, primaryKey types.Hash) (cycle types.Cycle, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	value := store.Get(getCycleKey(cycleNum))
+	value := store.Get(getCycleKey(primaryKey))
 	if value == nil {
 		return cycle, false
 	}
@@ -19,8 +19,8 @@ func (k Keeper) getCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle types.Cycle, 
 }
 
 // Store single election cycle
-func (k Keeper) setCycle(ctx sdk.Context, cycle types.Cycle) {
+func (k Keeper) SetCycle(ctx sdk.Context, cycle types.Cycle) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.MustMarshalCycle(k.cdc, cycle)
-	store.Set(getCycleKey(cycle.Num), bz)
+	store.Set(getCycleKey(cycle.PrimaryKey), bz)
 }

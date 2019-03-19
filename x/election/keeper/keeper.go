@@ -10,27 +10,30 @@ import (
 type Keeper struct {
 	storeKey sdk.StoreKey
 
+	validatorSet sdk.ValidatorSet
 	cycles       map[sdk.Int]types.Cycle
-	currentCycle sdk.Int
 
-	cdc *codec.Codec // Codec for binary encoding/decoding
+	cdc       *codec.Codec // Codec for binary encoding/decoding
+	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, vs sdk.ValidatorSet, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:     key,
+		validatorSet: vs,
 		cycles:       make(map[sdk.Int]types.Cycle, types.MaxCycles),
-		currentCycle: sdk.NewInt(0),
 		cdc:          cdc,
+		codespace:    codespace,
 	}
 	return keeper
 }
 
-// Increment current cycle number
-// Panics if maximum number of cycles has already been reached
-func (k *Keeper) incCurrentCycle() {
-	if k.currentCycle.GTE(sdk.NewInt(types.MaxCycles)) {
-		panic("last cycle already reached")
-	}
-	k.currentCycle.Add(sdk.NewInt(1))
+// Get validator set
+func (k Keeper) GetValidatorSet() sdk.ValidatorSet {
+	return k.validatorSet
+}
+
+// Get codespace
+func (k Keeper) GetCodespace() sdk.CodespaceType {
+	return k.codespace
 }

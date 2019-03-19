@@ -2,7 +2,9 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/MVPWorkshop/legaler-bc/x/election"
 	"sort"
+	"time"
 
 	"github.com/MVPWorkshop/legaler-bc/x/staking"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -34,6 +36,7 @@ type legalerApp struct {
 	tkeyStaking      *sdk.TransientStoreKey
 	keyMint          *sdk.KVStoreKey
 	keyDistribution  *sdk.KVStoreKey
+	keyElection      *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
 	tkeyParams       *sdk.TransientStoreKey
 
@@ -44,6 +47,7 @@ type legalerApp struct {
 	mintKeeper          mint.Keeper
 	distributionKeeper  distribution.Keeper
 	stakingKeeper       staking.Keeper
+	electionKeeper      election.Keeper
 }
 
 func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
@@ -65,9 +69,13 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 		tkeyStaking:      sdk.NewTransientStoreKey(staking.TStoreKey),
 		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
 		keyDistribution:  sdk.NewKVStoreKey(distribution.StoreKey),
+		keyElection:      sdk.NewKVStoreKey(election.StoreKey),
 		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
+
+	app.BaseApp.LastBlockHeight()
+	app.BaseApp.LastCommitID()
 
 	// The ParamsKeeper handles parameter storage for the application
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
@@ -119,11 +127,19 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 
 	app.stakingKeeper = stakeKeeper
 
+	app.electionKeeper = election.NewKeeper(
+		app.cdc,
+		app.keyElection,
+		&stakeKeeper,
+		election.DefaultCodespace,
+	)
+
 	// The app.Router is the main transaction router where each module registers its routes
 	app.Router().
 		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
 		AddRoute(distribution.RouterKey, distribution.NewHandler(app.distributionKeeper)).
-		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper))
+		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
+		AddRoute(election.RouterKey, election.NewHandler(app.electionKeeper))
 
 	// Register query routes
 	app.QueryRouter().
@@ -139,6 +155,7 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 		app.tkeyStaking,
 		app.keyMint,
 		app.keyDistribution,
+		app.keyElection,
 		app.keyParams,
 		app.tkeyParams,
 	)
@@ -158,6 +175,8 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 
 	return app
 }
+
+var GenesisTime time.Time
 
 // GenesisState represents chain state at the start of the chain. Any initial state (account balances) are stored here.
 type GenesisState struct {
@@ -205,10 +224,8 @@ func (app *legalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abc
 
 // Initialize store from a genesis state
 func (app *legalerApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
-	// Sort by account number to maintain consistency
-	sort.Slice(genesisState.Accounts, func(i, j int) bool {
-		return genesisState.Accounts[i].AccountNumber < genesisState.Accounts[j].AccountNumber
-	})
+	// Sort by account number and coins to maintain consistency
+	genesisState.sanitize()
 
 	// Load the accounts (BaseAccount for now)
 	for _, acc := range genesisState.Accounts {
@@ -216,7 +233,7 @@ func (app *legalerApp) initFromGenesisState(ctx sdk.Context, genesisState Genesi
 		app.accountKeeper.SetAccount(ctx, acc)
 	}
 
-	// Load the initial stake information
+	// Load the initial staking information
 	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakeData)
 	if err != nil {
 		panic(err) // TODO: Do this without panic
@@ -228,6 +245,17 @@ func (app *legalerApp) initFromGenesisState(ctx sdk.Context, genesisState Genesi
 	distribution.InitGenesis(ctx, app.distributionKeeper, genesisState.DistributionData)
 
 	return validators
+}
+
+// Sanitize sorts accounts and coin sets
+func (gs *GenesisState) sanitize() {
+	sort.Slice(gs.Accounts, func(i, j int) bool {
+		return gs.Accounts[i].AccountNumber < gs.Accounts[j].AccountNumber
+	})
+
+	for _, acc := range gs.Accounts {
+		acc.Coins = acc.Coins.Sort()
+	}
 }
 
 // The ExportAppStateAndValidators function helps bootstrap the initial state for application.
@@ -266,6 +294,7 @@ func MakeCodec() *codec.Codec {
 	staking.RegisterCodec(cdc)
 	bank.RegisterCodec(cdc)
 	distribution.RegisterCodec(cdc)
+	election.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	return cdc

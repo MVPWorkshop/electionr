@@ -11,46 +11,64 @@ type CodeType = sdk.CodeType
 const (
 	DefaultCodespace sdk.CodespaceType = ModuleName
 
-	CodeInvalidInput          = 101
-	CodeInvalidValidatorElect = 102
+	CodeInvalidInput     = 101
+	CodeInvalidValidator = 102
+	CodeInvalidBlock     = 103
+	CodeInvalidTime      = 104
 )
 
 func ErrNilValidatorAddress(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "validator operator address is nil")
+	return sdk.NewError(codespace, CodeInvalidInput, "Initiator operator address is required")
 }
 
 func ErrCycleNumberOutOfBounds(codespace sdk.CodespaceType, maxCycles int) sdk.Error {
 	return sdk.NewError(
 		codespace,
-		CodeInvalidValidatorElect,
+		CodeInvalidInput,
 		fmt.Sprintf("cycle number must be a positive integer lower than %d", maxCycles),
 	)
 }
 
-func ErrPublicKeysOutOfBounds(codespace sdk.CodespaceType, maxPubKeys int) sdk.Error {
+func ErrValidatorElectsOutOfBounds(codespace sdk.CodespaceType, maxElects int) sdk.Error {
 	return sdk.NewError(
 		codespace,
-		CodeInvalidValidatorElect,
-		fmt.Sprintf("validator elect public keys shouldn't be empty or larger than %d", maxPubKeys),
+		CodeInvalidInput,
+		fmt.Sprintf("validator elects shouldn't be empty or larger than %d", maxElects),
 	)
 }
 
-func ErrValidatorAddressesOutOfBounds(codespace sdk.CodespaceType, maxValidators int) sdk.Error {
+func ErrNilValidatorElectPubKey(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "elect public key shouldn't be empty")
+}
+
+func ErrNilValidatorElectAddress(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "elect operator address shouldn't be empty")
+}
+
+func ErrElectPlaceOutOfBounds(codespace sdk.CodespaceType, lastPlace int) sdk.Error {
 	return sdk.NewError(
 		codespace,
-		CodeInvalidValidatorElect,
-		fmt.Sprintf("validator elect operator addresses shouldn't be empty or larger than %d", maxValidators),
+		CodeInvalidInput,
+		fmt.Sprintf("cycle number must be a positive integer lower than %d", lastPlace),
 	)
 }
 
-func ErrNilValidatorElectorAddress(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidInput, "validator elect operator address is nil")
+func ErrValidatorNotBonded(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "validator should be bonded")
 }
 
-func ErrPubKeysValAddressesMissmatch(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(
-		codespace,
-		CodeInvalidValidatorElect,
-		"Number of public keys should be equal to number of validator operator addresses",
-	)
+func ErrValidatorAlreadyVoted(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidValidator, "the initiator has already voted for this request")
+}
+
+func ErrGetBlock(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidBlock, "block not found")
+}
+
+func ErrElectionYearFinished(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidTime, "election year has passed")
+}
+
+func ErrCycleElectionHasEnded(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidTime, "election for this cycle has ended")
 }
