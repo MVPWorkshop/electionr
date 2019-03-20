@@ -2,9 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/MVPWorkshop/legaler-bc/x/staking"
 	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
-	"strings"
 
 	"github.com/spf13/cobra"
 

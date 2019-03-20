@@ -4,9 +4,8 @@ import (
 	"encoding/binary"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // TODO remove some of these prefixes once have working multistore
@@ -87,7 +86,7 @@ func getValidatorPowerRank(validator types.Validator) []byte {
 
 	key[0] = ValidatorsByPowerIndexKey[0]
 	copy(key[1:powerBytesLen+1], powerBytes)
-	operAddrInvr := cp(validator.OperatorAddr)
+	operAddrInvr := cp(validator.OperatorAddress)
 	for i, b := range operAddrInvr {
 		operAddrInvr[i] = ^b
 	}

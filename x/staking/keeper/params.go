@@ -3,10 +3,9 @@ package keeper
 import (
 	"time"
 
+	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
-
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
 )
 
 // Default parameter namespace

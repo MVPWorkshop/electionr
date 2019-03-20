@@ -1,16 +1,15 @@
 package rest
 
 import (
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
 	"net/http"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
-
+	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 
 	"github.com/gorilla/mux"
 )

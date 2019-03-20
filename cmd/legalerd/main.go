@@ -2,38 +2,54 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/MVPWorkshop/legaler-bc"
-	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
 	"io"
-	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tendermint/libs/db"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+
+	app "github.com/MVPWorkshop/legaler-bc"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
+	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/store"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-var DefaultNodeHome = os.ExpandEnv("$HOME/.led")
-
 func main() {
-	cobra.EnableCommandSorting = false
-
 	cdc := app.MakeCodec()
-	ctx := server.NewDefaultContext()
 
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(sdk.Bech32PrefixAccAddr, sdk.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(sdk.Bech32PrefixValAddr, sdk.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(sdk.Bech32PrefixConsAddr, sdk.Bech32PrefixConsPub)
+	config.Seal()
+
+	ctx := server.NewDefaultContext()
+	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
 		Use:               "legalerd",
-		Short:             "legaler App Daemon (server)",
+		Short:             "Gaia Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
+	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.CollectGenTxsCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
+	rootCmd.AddCommand(gaiaInit.ValidateGenesisCmd(ctx, cdc))
+	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
-	server.AddCommands(ctx, cdc, rootCmd, newApp, appExporter())
+	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(rootCmd, "LE", DefaultNodeHome)
+	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
 	err := executor.Execute()
 	if err != nil {
 		// handle with #870
@@ -42,12 +58,24 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	return app.NewLegalerApp(logger, db)
+	return app.NewLegalerApp(
+		logger, db, traceStore, true,
+		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
+		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
+	)
 }
 
-func appExporter() server.AppExporter {
-	return func(logger log.Logger, db dbm.DB, _ io.Writer, _ int64, _ bool, _ []string) (json.RawMessage, []tmtypes.GenesisValidator, error) {
-		dapp := app.NewLegalerApp(logger, db)
-		return dapp.ExportAppStateAndValidators()
+func exportAppStateAndTMValidators(
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
+) (json.RawMessage, []tmtypes.GenesisValidator, error) {
+	if height != -1 {
+		legApp := app.NewLegalerApp(logger, db, traceStore, false)
+		err := legApp.LoadHeight(height)
+		if err != nil {
+			return nil, nil, err
+		}
+		return legApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 	}
+	legApp := app.NewLegalerApp(logger, db, traceStore, true)
+	return legApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

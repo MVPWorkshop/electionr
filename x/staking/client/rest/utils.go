@@ -2,20 +2,20 @@ package rest
 
 import (
 	"fmt"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/client/rest"
+	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
 
 	"github.com/gorilla/mux"
+
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 // contains checks if the a given query contains one of the tx types

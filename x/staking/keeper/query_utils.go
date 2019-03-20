@@ -2,7 +2,6 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
 )
 
@@ -20,7 +19,7 @@ func (k Keeper) GetDelegatorValidators(ctx sdk.Context, delegatorAddr sdk.AccAdd
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
 		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
 
-		validator, found := k.GetValidator(ctx, delegation.ValidatorAddr)
+		validator, found := k.GetValidator(ctx, delegation.ValidatorAddress)
 		if !found {
 			panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 		}
@@ -39,7 +38,7 @@ func (k Keeper) GetDelegatorValidator(ctx sdk.Context, delegatorAddr sdk.AccAddr
 		return validator, types.ErrNoDelegation(types.DefaultCodespace)
 	}
 
-	validator, found = k.GetValidator(ctx, delegation.ValidatorAddr)
+	validator, found = k.GetValidator(ctx, delegation.ValidatorAddress)
 	if !found {
 		panic(types.ErrNoValidatorFound(types.DefaultCodespace))
 	}
@@ -99,10 +98,10 @@ func (k Keeper) GetAllRedelegations(ctx sdk.Context, delegator sdk.AccAddress,
 
 	for ; iterator.Valid(); iterator.Next() {
 		redelegation := types.MustUnmarshalRED(k.cdc, iterator.Value())
-		if srcValFilter && !(srcValAddress.Equals(redelegation.ValidatorSrcAddr)) {
+		if srcValFilter && !(srcValAddress.Equals(redelegation.ValidatorSrcAddress)) {
 			continue
 		}
-		if dstValFilter && !(dstValAddress.Equals(redelegation.ValidatorDstAddr)) {
+		if dstValFilter && !(dstValAddress.Equals(redelegation.ValidatorDstAddress)) {
 			continue
 		}
 		redelegations = append(redelegations, redelegation)

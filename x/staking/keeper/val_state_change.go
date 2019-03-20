@@ -8,7 +8,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
 )
 
@@ -190,7 +189,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) types.
 	k.DeleteValidatorQueue(ctx, validator)
 
 	// trigger hook
-	k.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddr)
+	k.AfterValidatorBonded(ctx, validator.ConsAddress(), validator.OperatorAddress)
 
 	return validator
 }
@@ -225,7 +224,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.InsertValidatorQueue(ctx, validator)
 
 	// trigger hook
-	k.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddr)
+	k.AfterValidatorBeginUnbonding(ctx, validator.ConsAddress(), validator.OperatorAddress)
 
 	return validator
 }
