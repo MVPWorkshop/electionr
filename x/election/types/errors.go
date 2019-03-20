@@ -72,3 +72,11 @@ func ErrElectionYearFinished(codespace sdk.CodespaceType) sdk.Error {
 func ErrCycleElectionHasEnded(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidTime, "election for this cycle has ended")
 }
+
+func ErrCycleNotFound(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "cycle of that number does not exist")
+}
+
+func ErrCycleNumInvalid(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidInput, "cycle number must be a positive integer")
+}

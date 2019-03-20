@@ -144,7 +144,8 @@ func NewLegalerApp(logger log.Logger, db dbm.DB) *legalerApp {
 	// Register query routes
 	app.QueryRouter().
 		AddRoute(distribution.QuerierRoute, distribution.NewQuerier(app.distributionKeeper)).
-		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc))
+		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc)).
+		AddRoute(election.QuerierRoute, election.NewQuerier(app.electionKeeper, app.cdc))
 
 	// Initialize BaseApp
 	app.MountStores(
