@@ -11,11 +11,6 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	// TODO: Remove once transfers are enabled.
-	legalerbank "github.com/cosmos/cosmos-sdk/cmd/gaia/app/x/bank"
-
-	"github.com/MVPWorkshop/legaler-bc/x/slashing"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,13 +19,11 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-const (
-	appName = "LegalerApp"
-	// DefaultKeyPass contains the default key password for genesis transactions
-	DefaultKeyPass = "12345678"
-)
+const appName = "LegalerApp"
 
 // default home directories for expected binaries
 var (
@@ -151,14 +144,12 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	)
 
 	// register message routes
-	//
-	// TODO: Use standard bank router once transfers are enabled.
 	app.Router().
-		AddRoute(bank.RouterKey, legalerbank.NewHandler(app.bankKeeper)).
+		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
 		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
 		AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
 		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper))
-		// AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
+	// AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
 
 	app.QueryRouter().
 		AddRoute(auth.QuerierRoute, auth.NewQuerier(app.accountKeeper)).

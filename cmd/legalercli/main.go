@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,14 +22,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	sl "github.com/MVPWorkshop/legaler-bc/x/slashing"
-	staking "github.com/MVPWorkshop/legaler-bc/x/staking/client/rest"
 	at "github.com/cosmos/cosmos-sdk/x/auth"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	dist "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
+	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	st "github.com/cosmos/cosmos-sdk/x/staking"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"

@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	app "github.com/MVPWorkshop/legaler-bc"
+	"github.com/MVPWorkshop/legaler-bc"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"

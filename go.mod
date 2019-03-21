@@ -19,7 +19,7 @@ require (
 	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
-	github.com/gorilla/mux v1.7.0
+	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
@@ -30,9 +30,8 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/rs/cors v1.6.0 // indirect
 	github.com/spf13/cobra v0.0.3
-	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.2
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/go-amino v0.14.1
