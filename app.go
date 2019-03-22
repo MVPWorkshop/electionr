@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"github.com/MVPWorkshop/legaler-bc/x/election"
 	"sort"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -23,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-const appName = "LegalerApp"
+const appName = "Legaler"
 
 // default home directories for expected binaries
 var (
@@ -45,8 +47,8 @@ type LegalerApp struct {
 	keyMint     *sdk.KVStoreKey
 	keyDistr    *sdk.KVStoreKey
 	tkeyDistr   *sdk.TransientStoreKey
-	// keyGov           *sdk.KVStoreKey
 	keyFeeCollection *sdk.KVStoreKey
+	keyElection      *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
 	tkeyParams       *sdk.TransientStoreKey
 
@@ -58,8 +60,8 @@ type LegalerApp struct {
 	slashingKeeper      slashing.Keeper
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
-	// govKeeper           gov.Keeper
 	paramsKeeper params.Keeper
+	electionKeeper      election.Keeper
 }
 
 // NewLegalerApp returns a reference to an initialized LegalerApp.
@@ -69,9 +71,11 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	legApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
 	legApp.SetCommitMultiStoreTracer(traceStore)
 
+	// Here you initialize your application with the store keys it requires
 	var app = &LegalerApp{
 		BaseApp:     legApp,
 		cdc:         cdc,
+
 		keyMain:     sdk.NewKVStoreKey(bam.MainStoreKey),
 		keyAccount:  sdk.NewKVStoreKey(auth.StoreKey),
 		keyStaking:  sdk.NewKVStoreKey(staking.StoreKey),
@@ -80,12 +84,13 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 		keyDistr:    sdk.NewKVStoreKey(distr.StoreKey),
 		tkeyDistr:   sdk.NewTransientStoreKey(distr.TStoreKey),
 		keySlashing: sdk.NewKVStoreKey(slashing.StoreKey),
-		// keyGov:           sdk.NewKVStoreKey(gov.StoreKey),
 		keyFeeCollection: sdk.NewKVStoreKey(auth.FeeStoreKey),
+		keyElection:      sdk.NewKVStoreKey(election.StoreKey),
 		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
+	// The ParamsKeeper handles parameter storage for the application
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// define the accountKeeper
@@ -129,12 +134,6 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 		&stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		slashing.DefaultCodespace,
 	)
-	// app.govKeeper = gov.NewKeeper(
-	// 	app.cdc,
-	// 	app.keyGov,
-	// 	app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakingKeeper,
-	// 	gov.DefaultCodespace,
-	// )
 
 	// register the staking hooks
 	// NOTE: The stakingKeeper above is passed by reference, so that it can be
@@ -143,28 +142,49 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
 	)
 
-	// register message routes
+	app.electionKeeper = election.NewKeeper(
+		app.cdc,
+		app.keyElection,
+		&stakeKeeper,
+		election.DefaultCodespace,
+	)
+
+	// The app.Router is the main transaction router where each module registers its routes
 	app.Router().
 		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
 		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
-		AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
-		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper))
-	// AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
+		AddRoute(distribution.RouterKey, distribution.NewHandler(app.distributionKeeper)).
+		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
+		AddRoute(election.RouterKey, election.NewHandler(app.electionKeeper))
 
+	// Register query routes
 	app.QueryRouter().
 		AddRoute(auth.QuerierRoute, auth.NewQuerier(app.accountKeeper)).
 		AddRoute(distr.QuerierRoute, distr.NewQuerier(app.distrKeeper)).
-		// AddRoute(gov.QuerierRoute, gov.NewQuerier(app.govKeeper)).
 		AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
-		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc))
+		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc)).
+		AddRoute(election.QuerierRoute, election.NewQuerier(app.electionKeeper, app.cdc))
 
-	// initialize BaseApp
-	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,
-		app.keySlashing, app.keyFeeCollection, app.keyParams,
-		app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
+	// Initialize BaseApp
+	app.MountStores(
+		app.keyMain,
+		app.keyAccount,
+		app.keyFeeCollection,
+		app.keyStaking,
+		app.tkeyStaking,
+		app.keyMint,
+		app.keyDistr,
+		app.tkeyDistr,
+		app.keySlashing,
+		app.keyElection,
+		app.keyParams,
+		app.tkeyParams,
 	)
+
+	// The initChainer handles translating the genesis.json file into initial state for the network
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
+	// The AnteHandler handles signature verification and transaction pre-processing
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -178,18 +198,41 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	return app
 }
 
-// custom tx codec
-func MakeCodec() *codec.Codec {
-	var cdc = codec.New()
-	bank.RegisterCodec(cdc)
-	staking.RegisterCodec(cdc)
-	distr.RegisterCodec(cdc)
-	slashing.RegisterCodec(cdc)
-	// gov.RegisterCodec(cdc)
-	auth.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	return cdc
+// The initChainer defines how accounts in genesis.json are mapped into the application state on initial chain start.
+func (app *LegalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	stateJSON := req.AppStateBytes
+	// TODO is this now the whole genesis file?
+
+	var genesisState GenesisState
+	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
+	if err != nil {
+		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
+		// return sdk.ErrGenesisParse("").TraceCause(err, "")
+	}
+
+	validators := app.initFromGenesisState(ctx, genesisState)
+
+	// sanity check
+	if len(req.Validators) > 0 {
+		if len(req.Validators) != len(validators) {
+			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d)",
+				len(req.Validators), len(validators)))
+		}
+		sort.Sort(abci.ValidatorUpdates(req.Validators))
+		sort.Sort(abci.ValidatorUpdates(validators))
+		for i, val := range validators {
+			if !val.Equal(req.Validators[i]) {
+				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
+			}
+		}
+	}
+
+	// assert runtime invariants
+	app.assertRuntimeInvariants()
+
+	return abci.ResponseInitChain{
+		Validators: validators,
+	}
 }
 
 // application updates every end block
@@ -226,7 +269,7 @@ func (app *LegalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abc
 	}
 }
 
-// initialize store from a genesis state
+// Initialize store from a genesis state
 func (app *LegalerApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
 	genesisState.Sanitize()
 
@@ -250,7 +293,6 @@ func (app *LegalerApp) initFromGenesisState(ctx sdk.Context, genesisState Genesi
 	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
 	bank.InitGenesis(ctx, app.bankKeeper, genesisState.BankData)
 	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData.Validators.ToSDKValidators())
-	// gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 
 	// validate genesis state
@@ -277,41 +319,18 @@ func (app *LegalerApp) initFromGenesisState(ctx sdk.Context, genesisState Genesi
 	return validators
 }
 
-// custom logic for legaler initialization
-func (app *LegalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	stateJSON := req.AppStateBytes
-	// TODO is this now the whole genesis file?
-
-	var genesisState GenesisState
-	err := app.cdc.UnmarshalJSON(stateJSON, &genesisState)
-	if err != nil {
-		panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-		// return sdk.ErrGenesisParse("").TraceCause(err, "")
-	}
-
-	validators := app.initFromGenesisState(ctx, genesisState)
-
-	// sanity check
-	if len(req.Validators) > 0 {
-		if len(req.Validators) != len(validators) {
-			panic(fmt.Errorf("len(RequestInitChain.Validators) != len(validators) (%d != %d)",
-				len(req.Validators), len(validators)))
-		}
-		sort.Sort(abci.ValidatorUpdates(req.Validators))
-		sort.Sort(abci.ValidatorUpdates(validators))
-		for i, val := range validators {
-			if !val.Equal(req.Validators[i]) {
-				panic(fmt.Errorf("validators[%d] != req.Validators[%d] ", i, i))
-			}
-		}
-	}
-
-	// assert runtime invariants
-	app.assertRuntimeInvariants()
-
-	return abci.ResponseInitChain{
-		Validators: validators,
-	}
+// MakeCodec generates the necessary codecs for Amino
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	auth.RegisterCodec(cdc)
+	bank.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
+	distribution.RegisterCodec(cdc)
+	slashing.RegisterCodec(cdc)
+	election.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	return cdc
 }
 
 // load a particular height

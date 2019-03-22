@@ -30,6 +30,7 @@ import (
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 	st "github.com/cosmos/cosmos-sdk/x/staking"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
+	election "github.com/MVPWorkshop/legaler-bc/x/election/client/rest"
 
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
@@ -59,6 +60,7 @@ func main() {
 	// the below functions and eliminate global vars, like we do
 	// with the cdc
 
+	// Add existing commands of each module client
 	// Module clients hold cli commnads (tx,query) and lcd routes
 	// TODO: Make the lcd command take a list of ModuleClient
 	mc := []sdk.ModuleClients{
@@ -93,8 +95,8 @@ func main() {
 		client.NewCompletionCmd(rootCmd, true),
 	)
 
-	// Add flags and prefix all env exposed with GA
-	executor := cli.PrepareMainCmd(rootCmd, "GA", app.DefaultCLIHome)
+	// Add flags and prefix all env exposed with LE
+	executor := cli.PrepareMainCmd(rootCmd, "LE", app.DefaultCLIHome)
 
 	err := executor.Execute()
 	if err != nil {
@@ -160,6 +162,7 @@ func registerRoutes(rs *lcd.RestServer) {
 	dist.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, distcmd.StoreKey)
 	staking.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
 	slashing.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc, rs.KeyBase)
+	election.RegisterRoutes(rs.CliCtx, rs.Mux, rs.Cdc)
 }
 
 func registerSwaggerUI(rs *lcd.RestServer) {
