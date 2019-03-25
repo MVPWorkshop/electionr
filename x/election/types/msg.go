@@ -20,9 +20,9 @@ type MsgInsertValidatorElects struct {
 
 // Since public key cannot be put in JSON we need to convert it to/from string
 type msgInsertValidatorElectsJSON struct {
-	ElectedValidators []ValidatorElect `json:"elected_validators"`
-	InitiatorAddr     sdk.ValAddress   `json:"initiator_address"` // Operator address of the validator that initiates this transaction
-	CycleNum          sdk.Int          `json:"cycle_number"`
+	ElectedValidators []ValidatorElectJSON `json:"elected_validators"`
+	InitiatorAddr     sdk.ValAddress       `json:"initiator_address"` // Operator address of the validator that initiates this transaction
+	CycleNum          sdk.Int              `json:"cycle_number"`
 }
 
 func NewMsgInsertValidatorElects(elects []ValidatorElect, initiatorAddr sdk.ValAddress, cycleNum sdk.Int) MsgInsertValidatorElects {
@@ -86,8 +86,14 @@ func (msg MsgInsertValidatorElects) GetSigners() []sdk.AccAddress {
 
 // MarshalJSON implements the json.Marshaller interface to provide custom JSON serialization of the MsgInsertValidatorElects type
 func (msg MsgInsertValidatorElects) MarshalJSON() ([]byte, error) {
+	elects := make([]ValidatorElectJSON, 0, MaxValidatorElectsPerCycle)
+	for _, elect := range msg.ElectedValidators {
+		valElect := NewValidatorElectJSON(elect.OperatorAddr, sdk.MustBech32ifyConsPub(elect.ConsPubKey), elect.Place)
+		elects = append(elects, valElect)
+	}
+
 	return json.Marshal(msgInsertValidatorElectsJSON{
-		ElectedValidators: msg.ElectedValidators,
+		ElectedValidators: elects,
 		InitiatorAddr:     msg.InitiatorAddr,
 		CycleNum:          msg.CycleNum,
 	})
@@ -96,11 +102,19 @@ func (msg MsgInsertValidatorElects) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the json.Unmarshaller interface to provide custom JSON deserialization of the MsgInsertValidatorElects type
 func (msg *MsgInsertValidatorElects) UnmarshalJSON(bz []byte) error {
 	var msgJSON msgInsertValidatorElectsJSON
-	if err := json.Unmarshal(bz, &msgJSON); err != nil {
+	err := json.Unmarshal(bz, &msgJSON)
+	if err != nil {
 		return err
 	}
 
-	msg.ElectedValidators = msgJSON.ElectedValidators
+	for _, elect := range msgJSON.ElectedValidators {
+		consPubKey, err := sdk.GetConsPubKeyBech32(elect.ConsPubKey)
+		if err != nil {
+			return err
+		}
+		valElect := NewValidatorElect(elect.OperatorAddr, consPubKey, elect.Place)
+		msg.ElectedValidators = append(msg.ElectedValidators, valElect)
+	}
 	msg.InitiatorAddr = msgJSON.InitiatorAddr
 	msg.CycleNum = msgJSON.CycleNum
 

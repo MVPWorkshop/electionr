@@ -6,9 +6,10 @@ import (
 
 	"github.com/MVPWorkshop/legaler-bc/x/election"
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/rest"
+	clientrest "github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {
@@ -19,9 +20,9 @@ func registerTxRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec
 }
 
 type msgInsertValidatorElectsInput struct {
-	BaseReq           rest.BaseReq              `json:"base_req"`
-	ElectedValidators []election.ValidatorElect `json:"elected_validators"`
-	CycleNum          sdk.Int                   `json:"cycle_number"`
+	BaseReq           rest.BaseReq                  `json:"base_req"`
+	ElectedValidators []election.ValidatorElectJSON `json:"elected_validators"`
+	CycleNum          sdk.Int                       `json:"cycle_number"`
 }
 
 func postInsertValidatorElectsHandlerFn(cdc *codec.Codec, cliCtx context.CLIContext) http.HandlerFunc {
@@ -48,8 +49,17 @@ func postInsertValidatorElectsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 			return
 		}
 
+		elects := make([]election.ValidatorElect, 0, election.MaxValidatorElectsPerCycle)
+		for _, elect := range req.ElectedValidators {
+			consPubKey, err := sdk.GetConsPubKeyBech32(elect.ConsPubKey)
+			if err != nil {
+				return
+			}
+			valElect := election.NewValidatorElect(elect.OperatorAddr, consPubKey, elect.Place)
+			elects = append(elects, valElect)
+		}
 		msg := election.NewMsgInsertValidatorElects(
-			req.ElectedValidators,
+			elects,
 			sdk.ValAddress(fromAddress),
 			req.CycleNum,
 		)
@@ -60,16 +70,10 @@ func postInsertValidatorElectsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 			return
 		}
 
-		// Check whether request was to generate transaction without signing and broadcasting
-		if req.BaseReq.GenerateOnly {
-			rest.WriteGenerateStdTxResponse(writer, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
-			return
-		}
-
 		// Upgrade context's account name and address
 		cliCtx = cliCtx.WithFromName(fromName).WithFromAddress(fromAddress)
 
-		// Broadcast message to other nodes
-		rest.CompleteAndBroadcastTxREST(writer, request, cliCtx, req.BaseReq, []sdk.Msg{msg}, cdc)
+		// Return message for signing
+		clientrest.WriteGenerateStdTxResponse(writer, cdc, cliCtx, req.BaseReq, []sdk.Msg{msg})
 	}
 }

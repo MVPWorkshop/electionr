@@ -6,11 +6,10 @@ import (
 
 	"github.com/MVPWorkshop/legaler-bc/x/election"
 	"github.com/MVPWorkshop/legaler-bc/x/election/querier"
-
 	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/rest"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 )
 
 func registerQueryRoutes(cliCtx context.CLIContext, r *mux.Router, cdc *codec.Codec) {

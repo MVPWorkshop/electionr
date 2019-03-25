@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"github.com/MVPWorkshop/legaler-bc/x/election"
 	"sort"
-	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	cmn "github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/MVPWorkshop/legaler-bc/x/election"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,8 +28,8 @@ const appName = "Legaler"
 
 // default home directories for expected binaries
 var (
-	DefaultCLIHome  = os.ExpandEnv("$HOME/.legalercli")
-	DefaultNodeHome = os.ExpandEnv("$HOME/.legalerd")
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.lecli")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.led")
 )
 
 // Extended ABCI application
@@ -39,14 +38,14 @@ type LegalerApp struct {
 	cdc *codec.Codec
 
 	// keys to access the substores
-	keyMain     *sdk.KVStoreKey
-	keyAccount  *sdk.KVStoreKey
-	keyStaking  *sdk.KVStoreKey
-	tkeyStaking *sdk.TransientStoreKey
-	keySlashing *sdk.KVStoreKey
-	keyMint     *sdk.KVStoreKey
-	keyDistr    *sdk.KVStoreKey
-	tkeyDistr   *sdk.TransientStoreKey
+	keyMain          *sdk.KVStoreKey
+	keyAccount       *sdk.KVStoreKey
+	keyStaking       *sdk.KVStoreKey
+	tkeyStaking      *sdk.TransientStoreKey
+	keySlashing      *sdk.KVStoreKey
+	keyMint          *sdk.KVStoreKey
+	keyDistr         *sdk.KVStoreKey
+	tkeyDistr        *sdk.TransientStoreKey
 	keyFeeCollection *sdk.KVStoreKey
 	keyElection      *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
@@ -60,7 +59,7 @@ type LegalerApp struct {
 	slashingKeeper      slashing.Keeper
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
-	paramsKeeper params.Keeper
+	paramsKeeper        params.Keeper
 	electionKeeper      election.Keeper
 }
 
@@ -73,17 +72,17 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 
 	// Here you initialize your application with the store keys it requires
 	var app = &LegalerApp{
-		BaseApp:     legApp,
-		cdc:         cdc,
+		BaseApp: legApp,
+		cdc:     cdc,
 
-		keyMain:     sdk.NewKVStoreKey(bam.MainStoreKey),
-		keyAccount:  sdk.NewKVStoreKey(auth.StoreKey),
-		keyStaking:  sdk.NewKVStoreKey(staking.StoreKey),
-		tkeyStaking: sdk.NewTransientStoreKey(staking.TStoreKey),
-		keyMint:     sdk.NewKVStoreKey(mint.StoreKey),
-		keyDistr:    sdk.NewKVStoreKey(distr.StoreKey),
-		tkeyDistr:   sdk.NewTransientStoreKey(distr.TStoreKey),
-		keySlashing: sdk.NewKVStoreKey(slashing.StoreKey),
+		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
+		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking:      sdk.NewTransientStoreKey(staking.TStoreKey),
+		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
+		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
+		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),
+		keySlashing:      sdk.NewKVStoreKey(slashing.StoreKey),
 		keyFeeCollection: sdk.NewKVStoreKey(auth.FeeStoreKey),
 		keyElection:      sdk.NewKVStoreKey(election.StoreKey),
 		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
@@ -145,7 +144,7 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	app.electionKeeper = election.NewKeeper(
 		app.cdc,
 		app.keyElection,
-		&stakeKeeper,
+		&stakingKeeper,
 		election.DefaultCodespace,
 	)
 
@@ -153,7 +152,7 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	app.Router().
 		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
 		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
-		AddRoute(distribution.RouterKey, distribution.NewHandler(app.distributionKeeper)).
+		AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
 		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
 		AddRoute(election.RouterKey, election.NewHandler(app.electionKeeper))
 
@@ -325,7 +324,7 @@ func MakeCodec() *codec.Codec {
 	auth.RegisterCodec(cdc)
 	bank.RegisterCodec(cdc)
 	staking.RegisterCodec(cdc)
-	distribution.RegisterCodec(cdc)
+	distr.RegisterCodec(cdc)
 	slashing.RegisterCodec(cdc)
 	election.RegisterCodec(cdc)
 	sdk.RegisterCodec(cdc)

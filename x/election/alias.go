@@ -14,7 +14,8 @@ const (
 
 	DefaultCodespace = types.DefaultCodespace
 
-	MaxCycles = types.MaxCycles
+	MaxCycles                  = types.MaxCycles
+	MaxValidatorElectsPerCycle = types.MaxValidatorElectsPerCycle
 )
 
 type (
@@ -23,6 +24,7 @@ type (
 	Keeper = keeper.Keeper
 	Cycle = types.Cycle
 	ValidatorElect = types.ValidatorElect
+	ValidatorElectJSON = types.ValidatorElectJSON
 
 	MsgInsertValidatorElects = types.MsgInsertValidatorElects
 )
@@ -32,6 +34,7 @@ var (
 	NewCycle                    = types.NewCycle
 	NewMsgInsertValidatorElects = types.NewMsgInsertValidatorElects
 	NewQuerier                  = querier.NewQuerier
+	NewValidatorElect           = types.NewValidatorElect
 
 	RegisterCodec = types.RegisterCodec
 

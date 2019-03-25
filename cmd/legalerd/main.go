@@ -2,13 +2,16 @@ package main
 
 import (
 	"encoding/json"
-	"io"
-
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io"
+	"path/filepath"
 
 	abci "github.com/tendermint/tendermint/abci/types"
+	cfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/cli"
+	"github.com/tendermint/tendermint/libs/common"
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -17,10 +20,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+const flagOverwrite = "overwrite"
 
 func main() {
 	cdc := app.MakeCodec()
@@ -35,21 +41,15 @@ func main() {
 	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
 		Use:               "legalerd",
-		Short:             "Gaia Daemon (server)",
+		Short:             "Legaler Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
-	rootCmd.AddCommand(gaiaInit.InitCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.CollectGenTxsCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.TestnetFilesCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.GenTxCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.AddGenesisAccountCmd(ctx, cdc))
-	rootCmd.AddCommand(gaiaInit.ValidateGenesisCmd(ctx, cdc))
-	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
+	rootCmd.AddCommand(initCmd(ctx, cdc))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(rootCmd, "GA", app.DefaultNodeHome)
+	executor := cli.PrepareBaseCmd(rootCmd, "LE", app.DefaultNodeHome)
 	err := executor.Execute()
 	if err != nil {
 		// handle with #870
@@ -63,6 +63,56 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application
 		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 	)
+}
+
+// initCmd returns a command that initializes all files needed for Tendermint and the respective application
+func initCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "init [moniker]",
+		Short: "Initialize private validator, p2p, genesis, and application configuration files",
+		Long:  `Initialize validators's and node's configuration files.`,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			config := ctx.Config
+			config.SetRoot(viper.GetString(cli.HomeFlag))
+
+			chainID := viper.GetString(client.FlagChainID)
+			if chainID == "" {
+				chainID = fmt.Sprintf("test-chain-%v", common.RandStr(6))
+			}
+
+			_, _, err := gaiaInit.InitializeNodeValidatorFiles(config)
+			if err != nil {
+				return err
+			}
+
+			config.Moniker = args[0]
+
+			var appState json.RawMessage
+			genFile := config.GenesisFile()
+
+			if !viper.GetBool(flagOverwrite) && common.FileExists(genFile) {
+				return fmt.Errorf("genesis.json file already exists: %v", genFile)
+			}
+
+			appState, err = codec.MarshalJSONIndent(cdc, app.NewDefaultGenesisState())
+
+			if err = gaiaInit.ExportGenesisFile(genFile, chainID, nil, appState); err != nil {
+				return err
+			}
+
+			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+
+			fmt.Printf("Initialized legalerd configuration and bootstrapping files in %s...\n", viper.GetString(cli.HomeFlag))
+			return nil
+		},
+	}
+
+	cmd.Flags().String(cli.HomeFlag, app.DefaultNodeHome, "node's home directory")
+	cmd.Flags().String(client.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().BoolP(flagOverwrite, "o", false, "overwrite the genesis.json file")
+
+	return cmd
 }
 
 func exportAppStateAndTMValidators(
