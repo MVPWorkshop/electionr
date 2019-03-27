@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/MVPWorkshop/legaler-bc/x/election/keeper"
+	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/rpc/core"
 )

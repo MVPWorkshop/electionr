@@ -12,6 +12,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/MVPWorkshop/legaler-bc/x/election"
+	"github.com/MVPWorkshop/legaler-bc/x/staking"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const appName = "Legaler"
@@ -184,6 +184,8 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	// The AnteHandler handles signature verification and transaction pre-processing
+	// It is responsible for pre-message validation checks such as account and signature validation,
+	// fee deduction and collection, and incrementing sequence numbers.
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -234,6 +236,9 @@ func (app *LegalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) a
 	}
 }
 
+// Proceed with caution, as computationally expensive loops in Begin and EndBlocker
+// could slow down the blockchain, or even freeze it if the loop is infinite.
+
 // application updates every end block
 func (app *LegalerApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	// mint new tokens for the previous block
@@ -255,7 +260,6 @@ func (app *LegalerApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 }
 
 // application updates every end block
-// nolint: unparam
 func (app *LegalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	// tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)

@@ -6,10 +6,10 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	stakingsim "github.com/MVPWorkshop/legaler-bc/x/staking/simulation"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	stakingsim "github.com/cosmos/cosmos-sdk/x/staking/simulation"
 )
 
 func (app *LegalerApp) runtimeInvariants() []sdk.Invariant {
