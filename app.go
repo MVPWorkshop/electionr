@@ -116,7 +116,9 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 		app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace),
 		staking.DefaultCodespace,
 	)
-	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
+	app.mintKeeper = mint.NewKeeper(
+		app.cdc,
+		app.keyMint,
 		app.paramsKeeper.Subspace(mint.DefaultParamspace),
 		&stakingKeeper, app.feeCollectionKeeper,
 	)
