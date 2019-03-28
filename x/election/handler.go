@@ -4,11 +4,12 @@ import (
 	"crypto/sha256"
 	"strconv"
 
-	"github.com/MVPWorkshop/legaler-bc/x/election/keeper"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/rpc/core"
+
+	"github.com/MVPWorkshop/legaler-bc/x/election/keeper"
+	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -42,14 +43,14 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	}
 
 	// Get validator (initiator) from validator set
-	initiator := k.GetValidatorSet().Validator(ctx, msg.InitiatorAddr)
-	if initiator == nil {
+	initiator, found := k.GetValidator(ctx, msg.InitiatorAddr)
+	if !found {
 		// Initiator of this transaction is not validator
-		return types.ErrNoValidatorFound(k.GetCodespace()).Result()
+		return staking.ErrNoValidatorFound(k.GetCodespace()).Result()
 	}
 	// Initiator shouldn't be jailed
 	if initiator.GetJailed() {
-		return types.ErrValidatorJailed(k.GetCodespace()).Result()
+		return staking.ErrValidatorJailed(k.GetCodespace()).Result()
 	}
 	// Initiator must be bonded
 	if !initiator.GetStatus().Equal(sdk.Bonded) {
@@ -82,8 +83,13 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	}
 
 	// Check whether more than 2/3 of currently active, bonded validators have voted for this cycle
-	if hasTwoThirdsMajority(ctx, k.GetValidatorSet(), cycle.ConsPubKeysVoted) {
+	if hasTwoThirdsMajority(ctx, k.GetLastBondedValidators(ctx), cycle.ConsPubKeysVoted) {
 		cycle.HasEnded = true
+		// Increment number of max validators
+		err = k.IncMaxValidatorsNum(ctx, uint16(len(msg.ElectedValidators)))
+		if err != nil {
+			return err.Result()
+		}
 	}
 
 	// Save cycle in state
@@ -137,12 +143,12 @@ func isElectionFinished(k Keeper) (bool, sdk.Error) {
 }
 
 // Returns true if more than 2/3 of currently active, bonded validators have voted for this cycle
-func hasTwoThirdsMajority(ctx sdk.Context, validatorSet sdk.ValidatorSet, consPubKeysVoted []crypto.PubKey) bool {
+func hasTwoThirdsMajority(ctx sdk.Context, validators []staking.Validator, consPubKeysVoted []crypto.PubKey) bool {
 	activeValidatorsNum := 0
 	votersStillActive := 0
 
 	// Iterate through active (bonded) validators from latest block
-	validatorSet.IterateLastValidators(ctx, func(_ int64, validator sdk.Validator) (stop bool) {
+	for _, validator := range validators {
 		// Check that validator that voted for this cycle is still active
 		for _, consPubKey := range consPubKeysVoted {
 			// Validator should be bonded and not jailed
@@ -153,9 +159,7 @@ func hasTwoThirdsMajority(ctx sdk.Context, validatorSet sdk.ValidatorSet, consPu
 		}
 		// Increment active validators number
 		activeValidatorsNum++
-
-		return false
-	})
+	}
 
 	quorum := activeValidatorsNum*2/3 + 1
 	if votersStillActive >= quorum {

@@ -23,21 +23,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 
 	election "github.com/MVPWorkshop/legaler-bc/x/election/client/rest"
+	st "github.com/MVPWorkshop/legaler-bc/x/staking"
+	staking "github.com/MVPWorkshop/legaler-bc/x/staking/client/rest"
 	at "github.com/cosmos/cosmos-sdk/x/auth"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
 	dist "github.com/cosmos/cosmos-sdk/x/distribution/client/rest"
 	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
-	st "github.com/cosmos/cosmos-sdk/x/staking"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/client/rest"
 
+	stakingClient "github.com/MVPWorkshop/legaler-bc/x/staking/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	distcmd "github.com/cosmos/cosmos-sdk/x/distribution"
 	distClient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	slashingClient "github.com/cosmos/cosmos-sdk/x/slashing/client"
-	stakingClient "github.com/cosmos/cosmos-sdk/x/staking/client"
 
 	_ "github.com/cosmos/cosmos-sdk/client/lcd/statik"
 )
