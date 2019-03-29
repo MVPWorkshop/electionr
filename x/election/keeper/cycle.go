@@ -43,3 +43,21 @@ func (k Keeper) GetCyclesByCycleNum(ctx sdk.Context, cycleNum sdk.Int) (cycles [
 
 	return cycles
 }
+
+// Get finalized cycle
+func (k Keeper) GetFinalizedCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle types.Cycle, found bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Get all cycles
+	iterator := sdk.KVStorePrefixIterator(store, cycleKey)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		cycle = types.MustUnmarshalCycle(k.cdc, iterator.Value())
+		if cycle.HasEnded {
+			return cycle, true
+		}
+	}
+
+	return cycle, false
+}

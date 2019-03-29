@@ -56,6 +56,13 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	if !initiator.GetStatus().Equal(sdk.Bonded) {
 		return ErrValidatorNotBonded(k.GetCodespace()).Result()
 	}
+	// Check whether there is already finished cycle with this number
+	// Note: This means that validators who didn't get to vote for this cycle
+	// but it has been elected nonetheless will get the error message, but their
+	// vote wouldn't change anything anyway
+	if _, found := k.GetFinalizedCycle(ctx, msg.CycleNum); found {
+		return ErrCycleFinalized(k.GetCodespace()).Result()
+	}
 
 	// Calculate primary key
 	primaryKey := calculatePrimaryKey(msg.CycleNum, msg.ElectedValidators)
@@ -85,6 +92,14 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	// Check whether more than 2/3 of currently active, bonded validators have voted for this cycle
 	if hasTwoThirdsMajority(ctx, k.GetLastBondedValidators(ctx), cycle.ConsPubKeysVoted) {
 		cycle.HasEnded = true
+
+		// Save latest block time as election time
+		latestBlock, e := core.Block(nil)
+		if e != nil {
+			panic("empty blockchain (no blocks)")
+		}
+		cycle.TimeEnded = latestBlock.BlockMeta.Header.Time
+
 		// Increment number of max validators
 		err = k.IncMaxValidatorsNum(ctx, uint16(len(msg.ElectedValidators)))
 		if err != nil {

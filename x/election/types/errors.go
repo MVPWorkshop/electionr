@@ -15,6 +15,7 @@ const (
 	CodeInvalidValidator = 102
 	CodeInvalidBlock     = 103
 	CodeInvalidTime      = 104
+	CodeInvalidCycle     = 105
 )
 
 func ErrNilValidatorAddress(codespace sdk.CodespaceType) sdk.Error {
@@ -79,4 +80,8 @@ func ErrCycleNotFound(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrCycleNumInvalid(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "cycle number must be a positive integer")
+}
+
+func ErrCycleFinalized(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidCycle, "cycle with this number has already been finalized")
 }

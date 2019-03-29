@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/tendermint/tendermint/crypto"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +20,8 @@ type Cycle struct {
 	// Note: We cannot use []sdk.Validator here instead of []crypto.PubKey
 	// because it cannot be marshaled, since it isn't registered with amino
 	ConsPubKeysVoted []crypto.PubKey `json:"cons_pub_keys_voted"` // Consensus public key of validators that voted for this cycle
-	HasEnded         bool            `json:"has_ended"`           // Whether the cycle has ended or not
+	HasEnded         bool            `json:"has_ended"`           // Whether the cycle has gained majority vote or not
+	TimeEnded        time.Time       `json:"time_ended"`          // Block time that represents the moment of gaining majority vote
 }
 
 func NewCycle(pk Hash, num sdk.Int, valElects []ValidatorElect, initiatorPubKey crypto.PubKey) Cycle {

@@ -45,6 +45,7 @@ var (
 	ErrCycleElectionHasEnded  = types.ErrCycleElectionHasEnded
 	ErrCycleNumInvalid        = types.ErrCycleNumInvalid
 	ErrCycleNumberOutOfBounds = types.ErrCycleNumberOutOfBounds
+	ErrCycleFinalized         = types.ErrCycleFinalized
 
 	CycleNum   = tags.CycleNum
 	NumVotes   = tags.NumVotes
