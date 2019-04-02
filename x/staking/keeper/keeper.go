@@ -18,6 +18,7 @@ type Keeper struct {
 	storeTKey          sdk.StoreKey
 	cdc                *codec.Codec
 	bankKeeper         types.BankKeeper
+	electionKeeper     types.ElectionKeeper
 	hooks              sdk.StakingHooks
 	paramstore         params.Subspace
 	validatorCache     map[string]cachedValidator
@@ -35,6 +36,7 @@ func NewKeeper(cdc *codec.Codec, key, tkey sdk.StoreKey, bk types.BankKeeper,
 		storeTKey:          tkey,
 		cdc:                cdc,
 		bankKeeper:         bk,
+		electionKeeper:     nil,
 		paramstore:         paramstore.WithKeyTable(ParamKeyTable()),
 		hooks:              nil,
 		validatorCache:     make(map[string]cachedValidator, aminoCacheSize),
@@ -92,4 +94,11 @@ func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshalBinaryLengthPrefixed(power)
 	store.Set(LastTotalPowerKey, b)
+}
+
+func (k *Keeper) SetElectionKeeper(ek types.ElectionKeeper) {
+	if k.electionKeeper != nil {
+		panic("cannot set election keeper twice")
+	}
+	k.electionKeeper = ek
 }

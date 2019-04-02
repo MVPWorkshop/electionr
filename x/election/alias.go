@@ -19,8 +19,6 @@ const (
 )
 
 type (
-	Hash = types.Hash
-
 	Keeper = keeper.Keeper
 	Cycle = types.Cycle
 	ValidatorElect = types.ValidatorElect
@@ -40,7 +38,6 @@ var (
 
 	ErrValidatorNotBonded     = types.ErrValidatorNotBonded
 	ErrValidatorAlreadyVoted  = types.ErrValidatorAlreadyVoted
-	ErrGetBlock               = types.ErrGetBlock
 	ErrElectionYearFinished   = types.ErrElectionYearFinished
 	ErrCycleElectionHasEnded  = types.ErrCycleElectionHasEnded
 	ErrCycleNumInvalid        = types.ErrCycleNumInvalid

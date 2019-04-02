@@ -1,20 +1,12 @@
 package election
 
 import (
-	"crypto/sha256"
 	"strconv"
-
-	"github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/rpc/core"
 
 	"github.com/MVPWorkshop/legaler-bc/x/election/keeper"
 	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	sk "github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	daysInYear = 365
-	hoursInDay = 24
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {
@@ -34,10 +26,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElects, k keeper.Keeper) sdk.Result {
 	// TODO: Check contract address
 	// Check whether election process is over
-	finished, err := isElectionFinished(k)
-	if err != nil {
-		return err.Result()
-	}
+	finished := sk.IsElectionFinished(ctx)
 	if finished {
 		return ErrElectionYearFinished(k.GetCodespace()).Result()
 	}
@@ -90,25 +79,25 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	}
 
 	// Check whether more than 2/3 of currently active, bonded validators have voted for this cycle
-	if hasTwoThirdsMajority(ctx, k.GetLastBondedValidators(ctx), cycle.ConsPubKeysVoted) {
+	if hasTwoThirdsMajority(k.GetLastBondedValidators(ctx), cycle.ConsPubKeysVoted) {
 		cycle.HasEnded = true
 
 		// Save latest block time as election time
-		latestBlock, e := core.Block(nil)
-		if e != nil {
-			panic("empty blockchain (no blocks)")
-		}
-		cycle.TimeEnded = latestBlock.BlockMeta.Header.Time
+		latestBlock := ctx.BlockHeader()
+		cycle.TimeEnded = latestBlock.GetTime()
 
 		// Increment number of max validators
-		err = k.IncMaxValidatorsNum(ctx, uint16(len(msg.ElectedValidators)))
+		err := k.IncMaxValidatorsNum(ctx, uint16(len(msg.ElectedValidators)))
 		if err != nil {
 			return err.Result()
 		}
+
+		// Add enough tokens to each elect (from this cycle) for him to obtain enough starting power
+		err = k.AddInitialCoinsToElects(ctx, cycle.ValidatorElects)
 	}
 
 	// Save cycle in state
-	k.SetCycle(ctx, cycle)
+	k.SetCycle(ctx, &cycle)
 
 	tags := sdk.NewTags(
 		CycleNum, cycle.Num.String(),
@@ -119,66 +108,4 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	return sdk.Result{
 		Tags: tags,
 	}
-}
-
-// Calculates cycle primary key by concatenating cycle number with validator elects
-func calculatePrimaryKey(cycleNum sdk.Int, elects []ValidatorElect) Hash {
-	// Convert cycle number to byte slice
-	data := []byte(cycleNum.String())
-	// Append consensus public keys and operator addresses of the elects
-	for _, elect := range elects {
-		data = append(data, elect.ConsPubKey.Bytes()...)
-		data = append(data, elect.OperatorAddr.Bytes()...)
-	}
-	// Calculate and return SHA256 checksum of the data
-	return sha256.Sum256(data)
-}
-
-// Check whether election process has finished
-// Returns error in case Tendermint status fetching fails
-func isElectionFinished(k Keeper) (bool, sdk.Error) {
-	// Get first block
-	firstBlockNum := int64(1)
-	firstBlock, err := core.Block(&firstBlockNum)
-	if err != nil {
-		return false, ErrGetBlock(k.GetCodespace())
-	}
-	// Get latest block
-	latestBlock, err := core.Block(nil)
-	if err != nil {
-		return false, ErrGetBlock(k.GetCodespace())
-	}
-	// Check if election year has passed
-	timePassed := latestBlock.BlockMeta.Header.Time.Sub(firstBlock.BlockMeta.Header.Time)
-	x := timePassed.Hours()
-	if x/hoursInDay > daysInYear {
-		return true, nil
-	}
-	return false, nil
-}
-
-// Returns true if more than 2/3 of currently active, bonded validators have voted for this cycle
-func hasTwoThirdsMajority(ctx sdk.Context, validators []staking.Validator, consPubKeysVoted []crypto.PubKey) bool {
-	activeValidatorsNum := 0
-	votersStillActive := 0
-
-	// Iterate through active (bonded) validators from latest block
-	for _, validator := range validators {
-		// Check that validator that voted for this cycle is still active
-		for _, consPubKey := range consPubKeysVoted {
-			// Validator should be bonded and not jailed
-			if consPubKey.Equals(validator.GetConsPubKey()) && validator.GetStatus().Equal(sdk.Bonded) && !validator.GetJailed() {
-				votersStillActive++
-				break
-			}
-		}
-		// Increment active validators number
-		activeValidatorsNum++
-	}
-
-	quorum := activeValidatorsNum*2/3 + 1
-	if votersStillActive >= quorum {
-		return true
-	}
-	return false
 }

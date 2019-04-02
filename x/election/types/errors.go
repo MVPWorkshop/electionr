@@ -13,9 +13,8 @@ const (
 
 	CodeInvalidInput     = 101
 	CodeInvalidValidator = 102
-	CodeInvalidBlock     = 103
-	CodeInvalidTime      = 104
-	CodeInvalidCycle     = 105
+	CodeInvalidTime      = 103
+	CodeInvalidCycle     = 104
 )
 
 func ErrNilValidatorAddress(codespace sdk.CodespaceType) sdk.Error {
@@ -60,10 +59,6 @@ func ErrValidatorNotBonded(codespace sdk.CodespaceType) sdk.Error {
 
 func ErrValidatorAlreadyVoted(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidValidator, "the initiator has already voted for this request")
-}
-
-func ErrGetBlock(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidBlock, "block not found")
 }
 
 func ErrElectionYearFinished(codespace sdk.CodespaceType) sdk.Error {

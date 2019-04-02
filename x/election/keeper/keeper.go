@@ -11,16 +11,18 @@ type Keeper struct {
 	storeKey sdk.StoreKey
 
 	stakingKeeper types.StakingKeeper
+	bankKeeper    types.BankKeeper
 	cycles        map[sdk.Int]types.Cycle
 
 	cdc       *codec.Codec // Codec for binary encoding/decoding
 	codespace sdk.CodespaceType
 }
 
-func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, codespace sdk.CodespaceType) Keeper {
+func NewKeeper(cdc *codec.Codec, key sdk.StoreKey, sk types.StakingKeeper, bk types.BankKeeper, codespace sdk.CodespaceType) Keeper {
 	keeper := Keeper{
 		storeKey:      key,
 		stakingKeeper: sk,
+		bankKeeper:    bk,
 		cycles:        make(map[sdk.Int]types.Cycle, types.MaxCycles),
 		cdc:           cdc,
 		codespace:     codespace,

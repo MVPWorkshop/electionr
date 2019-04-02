@@ -11,6 +11,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Protection period for newly elected validators.
+// They are protected since it would be unfair
+// if someone could push them out immediately
+// after they have passed proof of determination.
+const protectionPeriod = 30
+
 // Apply and return accumulated updates to the bonded validator set. Also,
 // * Updates the active valset as keyed by LastValidatorPowerKey.
 // * Updates the total power as keyed by LastTotalPowerKey.
@@ -34,6 +40,57 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	// (see LastValidatorPowerKey).
 	last := k.getLastValidatorsByAddr(ctx)
 
+	// Validators that should be protected
+	protectedValidators := make([]types.Validator, 0)
+
+	// Check if election process is underway
+	//if !election.IsElectionFinished() {
+	if !IsElectionFinished(ctx) {
+
+		// Get latest block
+		latestBlock := ctx.BlockHeader()
+
+		// Determine all cycles whose validator elects should be protected
+		finalizedCycles := k.electionKeeper.GetAllFinalizedCycles(ctx)
+		for _, cycle := range finalizedCycles {
+
+			// Check if protection period for this cycle is still underway
+			timePassed := latestBlock.GetTime().Sub(cycle.GetTimeEnded())
+			if timePassed.Hours()/hoursInDay <= protectionPeriod {
+
+				// Did this cycle's state change?
+				hasUpdated := false
+				elects := cycle.GetValidatorElects()
+				// Since protection period hasn't passed, add candidates to protected validators
+				for i, elect := range elects {
+
+					// Try to get this validator, and add it to protected validators
+					// This will show us whether elect has set up his node
+					val, found := k.GetValidator(ctx, elect.GetOperatorAddress())
+					// Check whether validator elect wants to leave
+					if val.GetStatus() == sdk.Unbonding {
+						// Update original object, and not just copied value
+						elects[i].LeaveProtection()
+						hasUpdated = true
+					} else if found && !val.GetJailed() { // Validator elect shouldn't be jailed
+						protectedValidators = append(protectedValidators, val)
+					}
+				}
+
+				// Update cycle state if anything changed
+				if hasUpdated {
+					cycle.UpdateValidatorElects(elects)
+					k.electionKeeper.SetCycle(ctx, cycle)
+				}
+			}
+		}
+
+	}
+
+	// We should push out enough validators with lowest power to make room for protected validators
+	protectIndex := int(maxValidators) - len(protectedValidators)
+	protectCount := 0
+
 	// Iterate over validators, highest power to lowest.
 	iterator := sdk.KVStoreReversePrefixIterator(store, ValidatorsByPowerIndexKey)
 	defer iterator.Close()
@@ -51,6 +108,32 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		// there are no more possible bonded validators
 		if validator.PotentialTendermintPower() == 0 {
 			break
+		}
+
+		// Check if election process is underway
+		if !IsElectionFinished(ctx) {
+			// Check if this validator is protected even if he has enough power
+			temp := make([]types.Validator, 0)
+			for _, protected := range protectedValidators {
+				// If he is, remove him from protected slice
+				if !validator.OperatorAddress.Equals(protected.OperatorAddress) {
+					temp = append(temp, protected)
+				} else {
+					// Decrease spots which need to be freed for protected validators
+					protectIndex++
+					break
+				}
+			}
+			protectedValidators = temp
+
+			if protectIndex == count {
+				// Substitute validator with lowest power with protected validator
+				validator = protectedValidators[protectCount]
+				valAddr = validator.OperatorAddress
+				// Increase counts to protect next validator elect
+				protectIndex++
+				protectCount++
+			}
 		}
 
 		// apply the appropriate state change if necessary

@@ -112,42 +112,49 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	)
 	stakingKeeper := staking.NewKeeper(
 		app.cdc,
-		app.keyStaking, app.tkeyStaking,
-		app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace),
+		app.keyStaking,
+		app.tkeyStaking,
+		app.bankKeeper,
+		app.paramsKeeper.Subspace(staking.DefaultParamspace),
 		staking.DefaultCodespace,
 	)
 	app.mintKeeper = mint.NewKeeper(
 		app.cdc,
 		app.keyMint,
 		app.paramsKeeper.Subspace(mint.DefaultParamspace),
-		&stakingKeeper, app.feeCollectionKeeper,
+		&stakingKeeper,
+		app.feeCollectionKeeper,
 	)
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
 		app.keyDistr,
 		app.paramsKeeper.Subspace(distr.DefaultParamspace),
-		app.bankKeeper, &stakingKeeper, app.feeCollectionKeeper,
+		app.bankKeeper,
+		&stakingKeeper,
+		app.feeCollectionKeeper,
 		distr.DefaultCodespace,
 	)
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
 		app.keySlashing,
-		&stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
+		&stakingKeeper,
+		app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		slashing.DefaultCodespace,
 	)
-
-	// register the staking hooks
-	// NOTE: The stakingKeeper above is passed by reference, so that it can be
-	// modified like below:
-	app.stakingKeeper = *stakingKeeper.SetHooks(
-		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
-	)
-
 	app.electionKeeper = election.NewKeeper(
 		app.cdc,
 		app.keyElection,
 		&stakingKeeper,
+		app.bankKeeper,
 		election.DefaultCodespace,
+	)
+
+	// NOTE: The stakingKeeper above is passed by reference, so that it can be
+	// modified like below:
+	stakingKeeper.SetElectionKeeper(app.electionKeeper)
+	// register the staking hooks
+	app.stakingKeeper = *stakingKeeper.SetHooks(
+		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
 	)
 
 	// The app.Router is the main transaction router where each module registers its routes
