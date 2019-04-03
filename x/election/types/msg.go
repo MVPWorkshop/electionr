@@ -49,7 +49,7 @@ func (msg MsgInsertValidatorElects) ValidateBasic() sdk.Error {
 	if msg.InitiatorAddr.Empty() {
 		return ErrNilValidatorAddress(DefaultCodespace)
 	}
-	if msg.CycleNum.LTE(sdk.ZeroInt()) || msg.CycleNum.GT(sdk.NewInt(MaxCycles)) {
+	if msg.CycleNum.LT(sdk.ZeroInt()) || msg.CycleNum.GT(sdk.NewInt(MaxCycles)) {
 		return ErrCycleNumberOutOfBounds(DefaultCodespace, MaxCycles)
 	}
 	if len(msg.ElectedValidators) == 0 || len(msg.ElectedValidators) > MaxValidatorElectsPerCycle {
