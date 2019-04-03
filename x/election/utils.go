@@ -22,10 +22,9 @@ func calculatePrimaryKey(cycleNum sdk.Int, elects []ValidatorElect) []byte {
 	return pk[:]
 }
 
-// Returns true if more than 2/3 of currently active, bonded validators have voted for this cycle
-func hasTwoThirdsMajority(validators []staking.Validator, consPubKeysVoted []crypto.PubKey) bool {
-	activeValidatorsNum := 0
-	votersStillActive := 0
+// Returns true if majority of currently active, bonded validators have voted for this cycle (their power is checked)
+func hasTwoThirdsMajority(validators []staking.Validator, consPubKeysVoted []crypto.PubKey, totalPower int64) bool {
+	var votersPower int64
 
 	// Iterate through active (bonded) validators from latest block
 	for _, validator := range validators {
@@ -33,16 +32,13 @@ func hasTwoThirdsMajority(validators []staking.Validator, consPubKeysVoted []cry
 		for _, consPubKey := range consPubKeysVoted {
 			// Validator should be bonded and not jailed
 			if consPubKey.Equals(validator.GetConsPubKey()) && validator.GetStatus().Equal(sdk.Bonded) && !validator.GetJailed() {
-				votersStillActive++
-				break
+				votersPower += validator.GetTendermintPower()
 			}
 		}
-		// Increment active validators number
-		activeValidatorsNum++
 	}
 
-	quorum := activeValidatorsNum*2/3 + 1
-	if votersStillActive >= quorum {
+	quorum := totalPower*2/3 + 1
+	if votersPower >= quorum {
 		return true
 	}
 	return false

@@ -34,7 +34,7 @@ func (k Keeper) GetCyclesByCycleNum(ctx sdk.Context, cycleNum sdk.Int) (cycles [
 	store := ctx.KVStore(k.storeKey)
 
 	// Get all cycles
-	// TODO: This can be optimized by saving map[cycleNum]cycle instead of just cycle. Then we wouldn't need to iterate through all cycles
+	// TODO: This can be optimized by saving map[cycleNum]cycle instead of just cycle
 	iterator := sdk.KVStorePrefixIterator(store, cycleKey)
 	defer iterator.Close()
 

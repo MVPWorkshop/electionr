@@ -44,8 +44,8 @@ func (k Keeper) GetCodespace() sdk.CodespaceType {
 	return k.codespace
 }
 
-func (k Keeper) GetMaxValidatorsNum(ctx sdk.Context) uint16 {
-	return k.stakingKeeper.GetParams(ctx).MaxValidators
+func (k Keeper) GetTotalPower(ctx sdk.Context) sdk.Int {
+	return k.stakingKeeper.GetLastTotalPower(ctx)
 }
 
 // Increments maximum number of validators by newValidatorNum

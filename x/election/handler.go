@@ -79,7 +79,7 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	}
 
 	// Check whether more than 2/3 of currently active, bonded validators have voted for this cycle
-	if hasTwoThirdsMajority(k.GetLastBondedValidators(ctx), cycle.ConsPubKeysVoted) {
+	if hasTwoThirdsMajority(k.GetLastBondedValidators(ctx), cycle.ConsPubKeysVoted, k.GetTotalPower(ctx).Int64()) {
 		cycle.HasEnded = true
 
 		// Save latest block time as election time

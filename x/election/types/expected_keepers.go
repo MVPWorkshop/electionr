@@ -16,6 +16,7 @@ type StakingKeeper interface {
 
 	// Increase non bonded tokens
 	InflateSupply(ctx sdk.Context, newTokens sdk.Int)
+	GetLastTotalPower(ctx sdk.Context) (power sdk.Int)
 }
 
 type BankKeeper interface {
