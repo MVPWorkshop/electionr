@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

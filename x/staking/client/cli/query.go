@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	"github.com/MVPWorkshop/electionr/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -1,4 +1,4 @@
-module github.com/MVPWorkshop/legaler-bc
+module github.com/MVPWorkshop/electionr
 
 go 1.12
 

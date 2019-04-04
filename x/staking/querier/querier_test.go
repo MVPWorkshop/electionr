@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	keep "github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	keep "github.com/MVPWorkshop/electionr/x/staking/keeper"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

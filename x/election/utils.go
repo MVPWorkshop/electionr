@@ -3,7 +3,7 @@ package election
 import (
 	"crypto/sha256"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 )

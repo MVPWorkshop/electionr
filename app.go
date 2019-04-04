@@ -11,8 +11,8 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/MVPWorkshop/legaler-bc/x/election"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/election"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,16 +24,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
-const appName = "Legaler"
+const appName = "Electionr"
 
 // default home directories for expected binaries
 var (
-	DefaultCLIHome  = os.ExpandEnv("$HOME/.lecli")
-	DefaultNodeHome = os.ExpandEnv("$HOME/.led")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.electionrd")
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.electionrcli")
 )
 
 // Extended ABCI application
-type LegalerApp struct {
+type ElectionrApp struct {
 	*bam.BaseApp
 	cdc *codec.Codec
 
@@ -63,16 +63,16 @@ type LegalerApp struct {
 	electionKeeper      election.Keeper
 }
 
-// NewLegalerApp returns a reference to an initialized LegalerApp.
-func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, baseAppOptions ...func(*bam.BaseApp)) *LegalerApp {
+// NewElectionrApp returns a reference to an initialized ElectionrApp.
+func NewElectionrApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, baseAppOptions ...func(*bam.BaseApp)) *ElectionrApp {
 	cdc := MakeCodec()
 
-	legApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
-	legApp.SetCommitMultiStoreTracer(traceStore)
+	electionrApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
+	electionrApp.SetCommitMultiStoreTracer(traceStore)
 
 	// Here you initialize your application with the store keys it requires
-	var app = &LegalerApp{
-		BaseApp: legApp,
+	var app = &ElectionrApp{
+		BaseApp: electionrApp,
 		cdc:     cdc,
 
 		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
@@ -209,7 +209,7 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 }
 
 // The initChainer defines how accounts in genesis.json are mapped into the application state on initial chain start.
-func (app *LegalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *ElectionrApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 	// TODO is this now the whole genesis file?
 
@@ -249,7 +249,7 @@ func (app *LegalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) a
 // could slow down the blockchain, or even freeze it if the loop is infinite.
 
 // application updates every end block
-func (app *LegalerApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *ElectionrApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	// mint new tokens for the previous block
 	mint.BeginBlocker(ctx, app.mintKeeper)
 
@@ -269,7 +269,7 @@ func (app *LegalerApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock)
 }
 
 // application updates every end block
-func (app *LegalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *ElectionrApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	// tags := gov.EndBlocker(ctx, app.govKeeper)
 	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)
 
@@ -282,7 +282,7 @@ func (app *LegalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abc
 }
 
 // Initialize store from a genesis state
-func (app *LegalerApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
+func (app *ElectionrApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
 	genesisState.Sanitize()
 
 	// load the accounts
@@ -308,7 +308,7 @@ func (app *LegalerApp) initFromGenesisState(ctx sdk.Context, genesisState Genesi
 	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
 
 	// validate genesis state
-	if err := LegalerValidateGenesisState(genesisState); err != nil {
+	if err := ElectionrValidateGenesisState(genesisState); err != nil {
 		panic(err) // TODO find a way to do this w/o panics
 	}
 
@@ -346,7 +346,7 @@ func MakeCodec() *codec.Codec {
 }
 
 // load a particular height
-func (app *LegalerApp) LoadHeight(height int64) error {
+func (app *ElectionrApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
 }
 

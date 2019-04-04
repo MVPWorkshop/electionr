@@ -1,10 +1,10 @@
 package election
 
 import (
-	"github.com/MVPWorkshop/legaler-bc/x/election/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/election/querier"
-	"github.com/MVPWorkshop/legaler-bc/x/election/tags"
-	"github.com/MVPWorkshop/legaler-bc/x/election/types"
+	"github.com/MVPWorkshop/electionr/x/election/keeper"
+	"github.com/MVPWorkshop/electionr/x/election/querier"
+	"github.com/MVPWorkshop/electionr/x/election/tags"
+	"github.com/MVPWorkshop/electionr/x/election/types"
 )
 
 const (

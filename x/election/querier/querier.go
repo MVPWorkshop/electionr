@@ -3,8 +3,8 @@ package querier
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/MVPWorkshop/legaler-bc/x/election/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/election/types"
+	"github.com/MVPWorkshop/electionr/x/election/keeper"
+	"github.com/MVPWorkshop/electionr/x/election/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

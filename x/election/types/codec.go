@@ -6,7 +6,7 @@ import (
 
 // Register concrete types on codec
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgInsertValidatorElects{}, "legaler/MsgInsertValidatorElects", nil)
+	cdc.RegisterConcrete(MsgInsertValidatorElects{}, "electionr/MsgInsertValidatorElects", nil)
 }
 
 // generic sealed codec to be used throughout sdk

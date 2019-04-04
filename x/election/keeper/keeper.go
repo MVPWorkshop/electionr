@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/MVPWorkshop/legaler-bc/x/election/types"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/election/types"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

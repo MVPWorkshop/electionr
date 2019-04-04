@@ -2,10 +2,10 @@
 package staking
 
 import (
-	"github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/querier"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	"github.com/MVPWorkshop/electionr/x/staking/keeper"
+	"github.com/MVPWorkshop/electionr/x/staking/querier"
+	"github.com/MVPWorkshop/electionr/x/staking/tags"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 )
 
 type (

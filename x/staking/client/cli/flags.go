@@ -3,7 +3,7 @@ package cli
 import (
 	flag "github.com/spf13/pflag"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 )
 
 // nolint

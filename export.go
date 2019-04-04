@@ -7,7 +7,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
-// export the state of legaler for a genesis file
-func (app *LegalerApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string) (
+// export the state of electionr for a genesis file
+func (app *ElectionrApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string) (
 	appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
 
 	// as if they could withdraw from the start of the next block
@@ -55,7 +55,7 @@ func (app *LegalerApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhite
 }
 
 // prepare for fresh start at zero height
-func (app *LegalerApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []string) {
+func (app *ElectionrApp) prepForZeroHeightGenesis(ctx sdk.Context, jailWhiteList []string) {
 	applyWhiteList := false
 
 	//Check if there is a whitelist

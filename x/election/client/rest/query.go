@@ -4,8 +4,8 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
-	"github.com/MVPWorkshop/legaler-bc/x/election"
-	"github.com/MVPWorkshop/legaler-bc/x/election/querier"
+	"github.com/MVPWorkshop/electionr/x/election"
+	"github.com/MVPWorkshop/electionr/x/election/querier"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

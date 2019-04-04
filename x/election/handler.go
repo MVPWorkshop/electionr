@@ -3,9 +3,9 @@ package election
 import (
 	"strconv"
 
-	"github.com/MVPWorkshop/legaler-bc/x/election/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
-	sk "github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
+	"github.com/MVPWorkshop/electionr/x/election/keeper"
+	"github.com/MVPWorkshop/electionr/x/staking"
+	sk "github.com/MVPWorkshop/electionr/x/staking/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

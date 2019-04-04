@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/MVPWorkshop/legaler-bc"
+	"github.com/MVPWorkshop/electionr"
 	"net/http"
 	"os"
 	"path"
@@ -22,9 +22,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	election "github.com/MVPWorkshop/legaler-bc/x/election/client/rest"
-	st "github.com/MVPWorkshop/legaler-bc/x/staking"
-	staking "github.com/MVPWorkshop/legaler-bc/x/staking/client/rest"
+	election "github.com/MVPWorkshop/electionr/x/election/client/rest"
+	st "github.com/MVPWorkshop/electionr/x/staking"
+	staking "github.com/MVPWorkshop/electionr/x/staking/client/rest"
 	at "github.com/cosmos/cosmos-sdk/x/auth"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/rest"
@@ -32,7 +32,7 @@ import (
 	sl "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/client/rest"
 
-	stakingClient "github.com/MVPWorkshop/legaler-bc/x/staking/client"
+	stakingClient "github.com/MVPWorkshop/electionr/x/staking/client"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	bankcmd "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	distcmd "github.com/cosmos/cosmos-sdk/x/distribution"
@@ -70,8 +70,8 @@ func main() {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "legalercli",
-		Short: "Command line interface for interacting with legalerd",
+		Use:   "electionrcli",
+		Short: "Command line interface for interacting with electionrd",
 	}
 
 	// Add --chain-id to persistent flags and mark it required
@@ -95,8 +95,8 @@ func main() {
 		client.NewCompletionCmd(rootCmd, true),
 	)
 
-	// Add flags and prefix all env exposed with LE
-	executor := cli.PrepareMainCmd(rootCmd, "LE", app.DefaultCLIHome)
+	// Add flags and prefix all env exposed with EL
+	executor := cli.PrepareMainCmd(rootCmd, "EL", app.DefaultCLIHome)
 
 	err := executor.Execute()
 	if err != nil {

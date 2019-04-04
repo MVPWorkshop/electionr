@@ -16,7 +16,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/MVPWorkshop/legaler-bc"
+	"github.com/MVPWorkshop/electionr"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	gaiaInit "github.com/cosmos/cosmos-sdk/cmd/gaia/init"
@@ -40,8 +40,8 @@ func main() {
 	ctx := server.NewDefaultContext()
 	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
-		Use:               "legalerd",
-		Short:             "Legaler Daemon (server)",
+		Use:               "electionrd",
+		Short:             "Electionr Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 	rootCmd.AddCommand(initCmd(ctx, cdc))
@@ -49,7 +49,7 @@ func main() {
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
 	// prepare and add flags
-	executor := cli.PrepareBaseCmd(rootCmd, "LE", app.DefaultNodeHome)
+	executor := cli.PrepareBaseCmd(rootCmd, "EL", app.DefaultNodeHome)
 	err := executor.Execute()
 	if err != nil {
 		// handle with #870
@@ -58,7 +58,7 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	return app.NewLegalerApp(
+	return app.NewElectionrApp(
 		logger, db, traceStore, true,
 		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
@@ -103,7 +103,7 @@ func initCmd(ctx *server.Context, cdc *codec.Codec) *cobra.Command {
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
-			fmt.Printf("Initialized legalerd configuration and bootstrapping files in %s...\n", viper.GetString(cli.HomeFlag))
+			fmt.Printf("Initialized electionrd configuration and bootstrapping files in %s...\n", viper.GetString(cli.HomeFlag))
 			return nil
 		},
 	}
@@ -119,13 +119,13 @@ func exportAppStateAndTMValidators(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailWhiteList []string,
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 	if height != -1 {
-		legApp := app.NewLegalerApp(logger, db, traceStore, false)
-		err := legApp.LoadHeight(height)
+		electionrApp := app.NewElectionrApp(logger, db, traceStore, false)
+		err := electionrApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, err
 		}
-		return legApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+		return electionrApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 	}
-	legApp := app.NewLegalerApp(logger, db, traceStore, true)
-	return legApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
+	electionrApp := app.NewElectionrApp(logger, db, traceStore, true)
+	return electionrApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }
