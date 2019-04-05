@@ -11,8 +11,8 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	keep "github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	keep "github.com/MVPWorkshop/electionr/x/staking/keeper"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

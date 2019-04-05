@@ -2,11 +2,10 @@ package client
 
 import (
 	"github.com/spf13/cobra"
-	amino "github.com/tendermint/go-amino"
+	"github.com/tendermint/go-amino"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking/client/cli"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
-
+	"github.com/MVPWorkshop/electionr/x/staking/client/cli"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/client"
 )
 

@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
-
 	"github.com/gorilla/mux"
 
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
+	"github.com/MVPWorkshop/electionr/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking/tags"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"

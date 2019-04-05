@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
 )
 
 // Cache the amino decoding of validators, as it can be the case that repeated slashing calls

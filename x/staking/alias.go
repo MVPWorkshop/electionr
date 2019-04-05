@@ -2,39 +2,41 @@
 package staking
 
 import (
-	"github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/querier"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	"github.com/MVPWorkshop/electionr/x/staking/keeper"
+	"github.com/MVPWorkshop/electionr/x/staking/querier"
+	"github.com/MVPWorkshop/electionr/x/staking/tags"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 )
 
 type (
-	Keeper                  = keeper.Keeper
-	FeeCollectionKeeper     = types.FeeCollectionKeeper
-	BankKeeper              = types.BankKeeper
-	DistributionKeeper      = types.DistributionKeeper
-	Validator               = types.Validator
-	Validators              = types.Validators
-	Description             = types.Description
-	Commission              = types.Commission
-	CommissionMsg           = types.CommissionMsg
-	Delegation              = types.Delegation
-	Delegations             = types.Delegations
-	UnbondingDelegation     = types.UnbondingDelegation
-	UnbondingDelegations    = types.UnbondingDelegations
-	Redelegation            = types.Redelegation
-	Redelegations           = types.Redelegations
-	Params                  = types.Params
-	Pool                    = types.Pool
-	MsgCreateValidator      = types.MsgCreateValidator
-	MsgEditValidator        = types.MsgEditValidator
-	MsgDelegate             = types.MsgDelegate
-	MsgUndelegate           = types.MsgUndelegate
-	MsgBeginRedelegate      = types.MsgBeginRedelegate
-	GenesisState            = types.GenesisState
-	QueryDelegatorParams    = querier.QueryDelegatorParams
-	QueryValidatorParams    = querier.QueryValidatorParams
-	QueryBondsParams        = querier.QueryBondsParams
+	Keeper = keeper.Keeper
+	FeeCollectionKeeper = types.FeeCollectionKeeper
+	BankKeeper = types.BankKeeper
+	DistributionKeeper = types.DistributionKeeper
+	Validator = types.Validator
+	Validators = types.Validators
+	Description = types.Description
+	Commission = types.Commission
+	CommissionMsg = types.CommissionMsg
+	Delegation = types.Delegation
+	Delegations = types.Delegations
+	UnbondingDelegation = types.UnbondingDelegation
+	UnbondingDelegations = types.UnbondingDelegations
+	Redelegation = types.Redelegation
+	Redelegations = types.Redelegations
+	Params = types.Params
+	Pool = types.Pool
+	Cycle = types.Cycle
+	ValidatorElect = types.ValidatorElect
+	MsgCreateValidator = types.MsgCreateValidator
+	MsgEditValidator = types.MsgEditValidator
+	MsgDelegate = types.MsgDelegate
+	MsgUndelegate = types.MsgUndelegate
+	MsgBeginRedelegate = types.MsgBeginRedelegate
+	GenesisState = types.GenesisState
+	QueryDelegatorParams = querier.QueryDelegatorParams
+	QueryValidatorParams = querier.QueryValidatorParams
+	QueryBondsParams = querier.QueryBondsParams
 	QueryRedelegationParams = querier.QueryRedelegationParams
 )
 

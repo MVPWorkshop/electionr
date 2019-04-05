@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/MVPWorkshop/legaler-bc/x/staking/types"
 )
 
 // Slash a validator for an infraction committed at a known height

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

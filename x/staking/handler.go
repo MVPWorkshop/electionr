@@ -7,10 +7,10 @@ import (
 	"github.com/tendermint/tendermint/libs/common"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/MVPWorkshop/electionr/x/staking/keeper"
+	"github.com/MVPWorkshop/electionr/x/staking/tags"
+	"github.com/MVPWorkshop/electionr/x/staking/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/tags"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/types"
 )
 
 func NewHandler(k keeper.Keeper) sdk.Handler {

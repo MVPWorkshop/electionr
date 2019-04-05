@@ -13,14 +13,14 @@ import (
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"github.com/MVPWorkshop/legaler-bc/x/slashing"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
 var (
@@ -148,9 +148,9 @@ func (ga *GenesisAccount) ToAccount() auth.Account {
 	return bacc
 }
 
-// Create the core parameters for genesis initialization for legaler
+// Create the core parameters for genesis initialization for electionr
 // note that the pubkey input is this machines pubkey
-func LegalerAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
+func ElectionrAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
 	genesisState GenesisState, err error) {
 
 	if err = cdc.UnmarshalJSON(genDoc.AppState, &genesisState); err != nil {
@@ -196,7 +196,7 @@ func LegalerAppGenState(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs [
 	return genesisState, nil
 }
 
-// NewDefaultGenesisState generates the default state for legaler.
+// NewDefaultGenesisState generates the default state for electionr.
 func NewDefaultGenesisState() GenesisState {
 	return GenesisState{
 		Accounts:     nil,
@@ -210,11 +210,11 @@ func NewDefaultGenesisState() GenesisState {
 	}
 }
 
-// LegalerValidateGenesisState ensures that the genesis state obeys the expected invariants
+// ElectionrValidateGenesisState ensures that the genesis state obeys the expected invariants
 // TODO: No validators are both bonded and jailed (#2088)
 // TODO: Error if there is a duplicate validator (#1708)
 // TODO: Ensure all state machine parameters are in genesis (#1704)
-func LegalerValidateGenesisState(genesisState GenesisState) error {
+func ElectionrValidateGenesisState(genesisState GenesisState) error {
 	if err := validateGenesisStateAccounts(genesisState.Accounts); err != nil {
 		return err
 	}
@@ -278,11 +278,11 @@ func validateGenesisStateAccounts(accs []GenesisAccount) error {
 	return nil
 }
 
-// LegalerAppGenState but with JSON
-func LegalerAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
+// ElectionrAppGenState but with JSON
+func ElectionrAppGenStateJSON(cdc *codec.Codec, genDoc tmtypes.GenesisDoc, appGenTxs []json.RawMessage) (
 	appState json.RawMessage, err error) {
 	// create the final app state
-	genesisState, err := LegalerAppGenState(cdc, genDoc, appGenTxs)
+	genesisState, err := ElectionrAppGenState(cdc, genDoc, appGenTxs)
 	if err != nil {
 		return nil, err
 	}

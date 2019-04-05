@@ -11,11 +11,8 @@ import (
 	dbm "github.com/tendermint/tendermint/libs/db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	// TODO: Remove once transfers are enabled.
-	legalerbank "github.com/cosmos/cosmos-sdk/cmd/gaia/app/x/bank"
-
-	"github.com/MVPWorkshop/legaler-bc/x/slashing"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
+	"github.com/MVPWorkshop/electionr/x/election"
+	"github.com/MVPWorkshop/electionr/x/staking"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,36 +21,33 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 )
 
-const (
-	appName = "LegalerApp"
-	// DefaultKeyPass contains the default key password for genesis transactions
-	DefaultKeyPass = "12345678"
-)
+const appName = "Electionr"
 
 // default home directories for expected binaries
 var (
-	DefaultCLIHome  = os.ExpandEnv("$HOME/.legalercli")
-	DefaultNodeHome = os.ExpandEnv("$HOME/.legalerd")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.electionrd")
+	DefaultCLIHome  = os.ExpandEnv("$HOME/.electionrcli")
 )
 
 // Extended ABCI application
-type LegalerApp struct {
+type ElectionrApp struct {
 	*bam.BaseApp
 	cdc *codec.Codec
 
 	// keys to access the substores
-	keyMain     *sdk.KVStoreKey
-	keyAccount  *sdk.KVStoreKey
-	keyStaking  *sdk.KVStoreKey
-	tkeyStaking *sdk.TransientStoreKey
-	keySlashing *sdk.KVStoreKey
-	keyMint     *sdk.KVStoreKey
-	keyDistr    *sdk.KVStoreKey
-	tkeyDistr   *sdk.TransientStoreKey
-	// keyGov           *sdk.KVStoreKey
+	keyMain          *sdk.KVStoreKey
+	keyAccount       *sdk.KVStoreKey
+	keyStaking       *sdk.KVStoreKey
+	tkeyStaking      *sdk.TransientStoreKey
+	keySlashing      *sdk.KVStoreKey
+	keyMint          *sdk.KVStoreKey
+	keyDistr         *sdk.KVStoreKey
+	tkeyDistr        *sdk.TransientStoreKey
 	keyFeeCollection *sdk.KVStoreKey
+	keyElection      *sdk.KVStoreKey
 	keyParams        *sdk.KVStoreKey
 	tkeyParams       *sdk.TransientStoreKey
 
@@ -65,34 +59,37 @@ type LegalerApp struct {
 	slashingKeeper      slashing.Keeper
 	mintKeeper          mint.Keeper
 	distrKeeper         distr.Keeper
-	// govKeeper           gov.Keeper
-	paramsKeeper params.Keeper
+	paramsKeeper        params.Keeper
+	electionKeeper      election.Keeper
 }
 
-// NewLegalerApp returns a reference to an initialized LegalerApp.
-func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, baseAppOptions ...func(*bam.BaseApp)) *LegalerApp {
+// NewElectionrApp returns a reference to an initialized ElectionrApp.
+func NewElectionrApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, baseAppOptions ...func(*bam.BaseApp)) *ElectionrApp {
 	cdc := MakeCodec()
 
-	legApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
-	legApp.SetCommitMultiStoreTracer(traceStore)
+	electionrApp := bam.NewBaseApp(appName, logger, db, auth.DefaultTxDecoder(cdc), baseAppOptions...)
+	electionrApp.SetCommitMultiStoreTracer(traceStore)
 
-	var app = &LegalerApp{
-		BaseApp:     legApp,
-		cdc:         cdc,
-		keyMain:     sdk.NewKVStoreKey(bam.MainStoreKey),
-		keyAccount:  sdk.NewKVStoreKey(auth.StoreKey),
-		keyStaking:  sdk.NewKVStoreKey(staking.StoreKey),
-		tkeyStaking: sdk.NewTransientStoreKey(staking.TStoreKey),
-		keyMint:     sdk.NewKVStoreKey(mint.StoreKey),
-		keyDistr:    sdk.NewKVStoreKey(distr.StoreKey),
-		tkeyDistr:   sdk.NewTransientStoreKey(distr.TStoreKey),
-		keySlashing: sdk.NewKVStoreKey(slashing.StoreKey),
-		// keyGov:           sdk.NewKVStoreKey(gov.StoreKey),
+	// Here you initialize your application with the store keys it requires
+	var app = &ElectionrApp{
+		BaseApp: electionrApp,
+		cdc:     cdc,
+
+		keyMain:          sdk.NewKVStoreKey(bam.MainStoreKey),
+		keyAccount:       sdk.NewKVStoreKey(auth.StoreKey),
+		keyStaking:       sdk.NewKVStoreKey(staking.StoreKey),
+		tkeyStaking:      sdk.NewTransientStoreKey(staking.TStoreKey),
+		keyMint:          sdk.NewKVStoreKey(mint.StoreKey),
+		keyDistr:         sdk.NewKVStoreKey(distr.StoreKey),
+		tkeyDistr:        sdk.NewTransientStoreKey(distr.TStoreKey),
+		keySlashing:      sdk.NewKVStoreKey(slashing.StoreKey),
 		keyFeeCollection: sdk.NewKVStoreKey(auth.FeeStoreKey),
+		keyElection:      sdk.NewKVStoreKey(election.StoreKey),
 		keyParams:        sdk.NewKVStoreKey(params.StoreKey),
 		tkeyParams:       sdk.NewTransientStoreKey(params.TStoreKey),
 	}
 
+	// The ParamsKeeper handles parameter storage for the application
 	app.paramsKeeper = params.NewKeeper(app.cdc, app.keyParams, app.tkeyParams)
 
 	// define the accountKeeper
@@ -115,65 +112,89 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	)
 	stakingKeeper := staking.NewKeeper(
 		app.cdc,
-		app.keyStaking, app.tkeyStaking,
-		app.bankKeeper, app.paramsKeeper.Subspace(staking.DefaultParamspace),
+		app.keyStaking,
+		app.tkeyStaking,
+		app.bankKeeper,
+		app.paramsKeeper.Subspace(staking.DefaultParamspace),
 		staking.DefaultCodespace,
 	)
-	app.mintKeeper = mint.NewKeeper(app.cdc, app.keyMint,
+	app.mintKeeper = mint.NewKeeper(
+		app.cdc,
+		app.keyMint,
 		app.paramsKeeper.Subspace(mint.DefaultParamspace),
-		&stakingKeeper, app.feeCollectionKeeper,
+		&stakingKeeper,
+		app.feeCollectionKeeper,
 	)
 	app.distrKeeper = distr.NewKeeper(
 		app.cdc,
 		app.keyDistr,
 		app.paramsKeeper.Subspace(distr.DefaultParamspace),
-		app.bankKeeper, &stakingKeeper, app.feeCollectionKeeper,
+		app.bankKeeper,
+		&stakingKeeper,
+		app.feeCollectionKeeper,
 		distr.DefaultCodespace,
 	)
 	app.slashingKeeper = slashing.NewKeeper(
 		app.cdc,
 		app.keySlashing,
-		&stakingKeeper, app.paramsKeeper.Subspace(slashing.DefaultParamspace),
+		&stakingKeeper,
+		app.paramsKeeper.Subspace(slashing.DefaultParamspace),
 		slashing.DefaultCodespace,
 	)
-	// app.govKeeper = gov.NewKeeper(
-	// 	app.cdc,
-	// 	app.keyGov,
-	// 	app.paramsKeeper, app.paramsKeeper.Subspace(gov.DefaultParamspace), app.bankKeeper, &stakingKeeper,
-	// 	gov.DefaultCodespace,
-	// )
+	app.electionKeeper = election.NewKeeper(
+		app.cdc,
+		app.keyElection,
+		&stakingKeeper,
+		app.bankKeeper,
+		election.DefaultCodespace,
+	)
 
-	// register the staking hooks
 	// NOTE: The stakingKeeper above is passed by reference, so that it can be
 	// modified like below:
+	stakingKeeper.SetElectionKeeper(app.electionKeeper)
+	// register the staking hooks
 	app.stakingKeeper = *stakingKeeper.SetHooks(
 		NewStakingHooks(app.distrKeeper.Hooks(), app.slashingKeeper.Hooks()),
 	)
 
-	// register message routes
-	//
-	// TODO: Use standard bank router once transfers are enabled.
+	// The app.Router is the main transaction router where each module registers its routes
 	app.Router().
-		AddRoute(bank.RouterKey, legalerbank.NewHandler(app.bankKeeper)).
+		AddRoute(bank.RouterKey, bank.NewHandler(app.bankKeeper)).
 		AddRoute(staking.RouterKey, staking.NewHandler(app.stakingKeeper)).
 		AddRoute(distr.RouterKey, distr.NewHandler(app.distrKeeper)).
-		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper))
-		// AddRoute(gov.RouterKey, gov.NewHandler(app.govKeeper))
+		AddRoute(slashing.RouterKey, slashing.NewHandler(app.slashingKeeper)).
+		AddRoute(election.RouterKey, election.NewHandler(app.electionKeeper))
 
+	// Register query routes
 	app.QueryRouter().
 		AddRoute(auth.QuerierRoute, auth.NewQuerier(app.accountKeeper)).
 		AddRoute(distr.QuerierRoute, distr.NewQuerier(app.distrKeeper)).
-		// AddRoute(gov.QuerierRoute, gov.NewQuerier(app.govKeeper)).
 		AddRoute(slashing.QuerierRoute, slashing.NewQuerier(app.slashingKeeper, app.cdc)).
-		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc))
+		AddRoute(staking.QuerierRoute, staking.NewQuerier(app.stakingKeeper, app.cdc)).
+		AddRoute(election.QuerierRoute, election.NewQuerier(app.electionKeeper, app.cdc))
 
-	// initialize BaseApp
-	app.MountStores(app.keyMain, app.keyAccount, app.keyStaking, app.keyMint, app.keyDistr,
-		app.keySlashing, app.keyFeeCollection, app.keyParams,
-		app.tkeyParams, app.tkeyStaking, app.tkeyDistr,
+	// Initialize BaseApp
+	app.MountStores(
+		app.keyMain,
+		app.keyAccount,
+		app.keyFeeCollection,
+		app.keyStaking,
+		app.tkeyStaking,
+		app.keyMint,
+		app.keyDistr,
+		app.tkeyDistr,
+		app.keySlashing,
+		app.keyElection,
+		app.keyParams,
+		app.tkeyParams,
 	)
+
+	// The initChainer handles translating the genesis.json file into initial state for the network
 	app.SetInitChainer(app.initChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
+	// The AnteHandler handles signature verification and transaction pre-processing
+	// It is responsible for pre-message validation checks such as account and signature validation,
+	// fee deduction and collection, and incrementing sequence numbers.
 	app.SetAnteHandler(auth.NewAnteHandler(app.accountKeeper, app.feeCollectionKeeper))
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -187,107 +208,8 @@ func NewLegalerApp(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLates
 	return app
 }
 
-// custom tx codec
-func MakeCodec() *codec.Codec {
-	var cdc = codec.New()
-	bank.RegisterCodec(cdc)
-	staking.RegisterCodec(cdc)
-	distr.RegisterCodec(cdc)
-	slashing.RegisterCodec(cdc)
-	// gov.RegisterCodec(cdc)
-	auth.RegisterCodec(cdc)
-	sdk.RegisterCodec(cdc)
-	codec.RegisterCrypto(cdc)
-	return cdc
-}
-
-// application updates every end block
-func (app *LegalerApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	// mint new tokens for the previous block
-	mint.BeginBlocker(ctx, app.mintKeeper)
-
-	// distribute rewards for the previous block
-	distr.BeginBlocker(ctx, req, app.distrKeeper)
-
-	// slash anyone who double signed.
-	// NOTE: This should happen after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool,
-	// so as to keep the CanWithdrawInvariant invariant.
-	// TODO: This should really happen at EndBlocker.
-	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
-
-	return abci.ResponseBeginBlock{
-		Tags: tags.ToKVPairs(),
-	}
-}
-
-// application updates every end block
-// nolint: unparam
-func (app *LegalerApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	// tags := gov.EndBlocker(ctx, app.govKeeper)
-	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)
-
-	app.assertRuntimeInvariants()
-
-	return abci.ResponseEndBlock{
-		ValidatorUpdates: validatorUpdates,
-		Tags:             tags,
-	}
-}
-
-// initialize store from a genesis state
-func (app *LegalerApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
-	genesisState.Sanitize()
-
-	// load the accounts
-	for _, gacc := range genesisState.Accounts {
-		acc := gacc.ToAccount()
-		acc = app.accountKeeper.NewAccount(ctx, acc) // set account number
-		app.accountKeeper.SetAccount(ctx, acc)
-	}
-
-	// initialize distribution (must happen before staking)
-	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
-
-	// load the initial staking information
-	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakingData)
-	if err != nil {
-		panic(err) // TODO find a way to do this w/o panics
-	}
-
-	// initialize module-specific stores
-	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
-	bank.InitGenesis(ctx, app.bankKeeper, genesisState.BankData)
-	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData.Validators.ToSDKValidators())
-	// gov.InitGenesis(ctx, app.govKeeper, genesisState.GovData)
-	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
-
-	// validate genesis state
-	if err := LegalerValidateGenesisState(genesisState); err != nil {
-		panic(err) // TODO find a way to do this w/o panics
-	}
-
-	if len(genesisState.GenTxs) > 0 {
-		for _, genTx := range genesisState.GenTxs {
-			var tx auth.StdTx
-			err = app.cdc.UnmarshalJSON(genTx, &tx)
-			if err != nil {
-				panic(err)
-			}
-			bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
-			res := app.BaseApp.DeliverTx(bz)
-			if !res.IsOK() {
-				panic(res.Log)
-			}
-		}
-
-		validators = app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	}
-	return validators
-}
-
-// custom logic for legaler initialization
-func (app *LegalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+// The initChainer defines how accounts in genesis.json are mapped into the application state on initial chain start.
+func (app *ElectionrApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	stateJSON := req.AppStateBytes
 	// TODO is this now the whole genesis file?
 
@@ -323,8 +245,108 @@ func (app *LegalerApp) initChainer(ctx sdk.Context, req abci.RequestInitChain) a
 	}
 }
 
+// Proceed with caution, as computationally expensive loops in Begin and EndBlocker
+// could slow down the blockchain, or even freeze it if the loop is infinite.
+
+// application updates every end block
+func (app *ElectionrApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	// mint new tokens for the previous block
+	mint.BeginBlocker(ctx, app.mintKeeper)
+
+	// distribute rewards for the previous block
+	distr.BeginBlocker(ctx, req, app.distrKeeper)
+
+	// slash anyone who double signed.
+	// NOTE: This should happen after distr.BeginBlocker so that
+	// there is nothing left over in the validator fee pool,
+	// so as to keep the CanWithdrawInvariant invariant.
+	// TODO: This should really happen at EndBlocker.
+	tags := slashing.BeginBlocker(ctx, req, app.slashingKeeper)
+
+	return abci.ResponseBeginBlock{
+		Tags: tags.ToKVPairs(),
+	}
+}
+
+// application updates every end block
+func (app *ElectionrApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	// tags := gov.EndBlocker(ctx, app.govKeeper)
+	validatorUpdates, tags := staking.EndBlocker(ctx, app.stakingKeeper)
+
+	app.assertRuntimeInvariants()
+
+	return abci.ResponseEndBlock{
+		ValidatorUpdates: validatorUpdates,
+		Tags:             tags,
+	}
+}
+
+// Initialize store from a genesis state
+func (app *ElectionrApp) initFromGenesisState(ctx sdk.Context, genesisState GenesisState) []abci.ValidatorUpdate {
+	genesisState.Sanitize()
+
+	// load the accounts
+	for _, gacc := range genesisState.Accounts {
+		acc := gacc.ToAccount()
+		acc = app.accountKeeper.NewAccount(ctx, acc) // set account number
+		app.accountKeeper.SetAccount(ctx, acc)
+	}
+
+	// initialize distribution (must happen before staking)
+	distr.InitGenesis(ctx, app.distrKeeper, genesisState.DistrData)
+
+	// load the initial staking information
+	validators, err := staking.InitGenesis(ctx, app.stakingKeeper, genesisState.StakingData)
+	if err != nil {
+		panic(err) // TODO find a way to do this w/o panics
+	}
+
+	// initialize module-specific stores
+	auth.InitGenesis(ctx, app.accountKeeper, app.feeCollectionKeeper, genesisState.AuthData)
+	bank.InitGenesis(ctx, app.bankKeeper, genesisState.BankData)
+	slashing.InitGenesis(ctx, app.slashingKeeper, genesisState.SlashingData, genesisState.StakingData.Validators.ToSDKValidators())
+	mint.InitGenesis(ctx, app.mintKeeper, genesisState.MintData)
+
+	// validate genesis state
+	if err := ElectionrValidateGenesisState(genesisState); err != nil {
+		panic(err) // TODO find a way to do this w/o panics
+	}
+
+	if len(genesisState.GenTxs) > 0 {
+		for _, genTx := range genesisState.GenTxs {
+			var tx auth.StdTx
+			err = app.cdc.UnmarshalJSON(genTx, &tx)
+			if err != nil {
+				panic(err)
+			}
+			bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
+			res := app.BaseApp.DeliverTx(bz)
+			if !res.IsOK() {
+				panic(res.Log)
+			}
+		}
+
+		validators = app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	}
+	return validators
+}
+
+// MakeCodec generates the necessary codecs for Amino
+func MakeCodec() *codec.Codec {
+	var cdc = codec.New()
+	auth.RegisterCodec(cdc)
+	bank.RegisterCodec(cdc)
+	staking.RegisterCodec(cdc)
+	distr.RegisterCodec(cdc)
+	slashing.RegisterCodec(cdc)
+	election.RegisterCodec(cdc)
+	sdk.RegisterCodec(cdc)
+	codec.RegisterCrypto(cdc)
+	return cdc
+}
+
 // load a particular height
-func (app *LegalerApp) LoadHeight(height int64) error {
+func (app *ElectionrApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height, app.keyMain)
 }
 

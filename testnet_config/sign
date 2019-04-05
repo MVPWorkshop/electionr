@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# $1 json file
+# $2 account address
+
+electionrcli tx sign $1 --from=$2 --chain-id=electionr-chain --signature-only

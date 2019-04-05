@@ -16,3 +16,8 @@ vendor
 .vendor-new
 build
 .idea
+Gopkg.lock
+.vscode
+
+# Data
+cmd/electionrcli/statik/statik.go

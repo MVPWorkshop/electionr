@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/MVPWorkshop/electionr/x/staking"
+	"github.com/MVPWorkshop/electionr/x/staking/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
-	"github.com/MVPWorkshop/legaler-bc/x/staking/keeper"
 )
 
 // AllInvariants runs all invariants of the staking module.

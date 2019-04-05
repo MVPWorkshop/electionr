@@ -6,13 +6,13 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	stakingsim "github.com/MVPWorkshop/legaler-bc/x/staking/simulation"
+	stakingsim "github.com/MVPWorkshop/electionr/x/staking/simulation"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	distrsim "github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 )
 
-func (app *LegalerApp) runtimeInvariants() []sdk.Invariant {
+func (app *ElectionrApp) runtimeInvariants() []sdk.Invariant {
 	return []sdk.Invariant{
 		banksim.NonnegativeBalanceInvariant(app.accountKeeper),
 		distrsim.NonNegativeOutstandingInvariant(app.distrKeeper),
@@ -21,12 +21,12 @@ func (app *LegalerApp) runtimeInvariants() []sdk.Invariant {
 	}
 }
 
-func (app *LegalerApp) assertRuntimeInvariants() {
+func (app *ElectionrApp) assertRuntimeInvariants() {
 	ctx := app.NewContext(false, abci.Header{Height: app.LastBlockHeight() + 1})
 	app.assertRuntimeInvariantsOnContext(ctx)
 }
 
-func (app *LegalerApp) assertRuntimeInvariantsOnContext(ctx sdk.Context) {
+func (app *ElectionrApp) assertRuntimeInvariantsOnContext(ctx sdk.Context) {
 	start := time.Now()
 	invariants := app.runtimeInvariants()
 	for _, inv := range invariants {

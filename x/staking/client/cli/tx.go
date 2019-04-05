@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MVPWorkshop/legaler-bc/x/staking"
-
 	"github.com/cosmos/cosmos-sdk/x/auth"
 
+	"github.com/MVPWorkshop/electionr/x/staking"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/utils"
