@@ -122,6 +122,7 @@ const (
 	QuerierRoute          = types.QuerierRoute
 	RouterKey             = types.RouterKey
 	DefaultCodespace      = types.DefaultCodespace
+	ProtectionPeriod      = keeper.ProtectionPeriod
 	CodeInvalidValidator  = types.CodeInvalidValidator
 	CodeInvalidDelegation = types.CodeInvalidDelegation
 	CodeInvalidInput      = types.CodeInvalidInput

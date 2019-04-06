@@ -1,6 +1,7 @@
 package election
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/MVPWorkshop/electionr/x/election/keeper"
@@ -94,6 +95,14 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 
 		// Add enough tokens to each elect (from this cycle) for him to obtain enough starting power
 		err = k.AddInitialCoinsToElects(ctx, cycle.ValidatorElects)
+
+		// Log that this cycle has gained a majority vote
+		logger := ctx.Logger().With("module", "x/" + ModuleName)
+		logger.Info(fmt.Sprintf("Cycle number %s has gained a majority vote.", cycle.Num.String()))
+		logger.Info(fmt.Sprintf(
+			"Validator elects from this cycle can now become validators, and will be protected for the next %d days.",
+			staking.ProtectionPeriod,
+		))
 	}
 
 	// Save cycle in state

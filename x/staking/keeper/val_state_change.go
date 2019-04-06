@@ -15,7 +15,7 @@ import (
 // They are protected since it would be unfair
 // if someone could push them out immediately
 // after they have passed proof of determination.
-const protectionPeriod = 30
+const ProtectionPeriod = 30
 
 // Apply and return accumulated updates to the bonded validator set. Also,
 // * Updates the active valset as keyed by LastValidatorPowerKey.
@@ -56,7 +56,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 			// Check if protection period for this cycle is still underway
 			timePassed := latestBlock.GetTime().Sub(cycle.GetTimeEnded())
-			if timePassed.Hours()/hoursInDay <= protectionPeriod {
+			if timePassed.Hours()/hoursInDay <= ProtectionPeriod {
 
 				// Did this cycle's state change?
 				hasUpdated := false
