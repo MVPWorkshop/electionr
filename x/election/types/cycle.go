@@ -76,3 +76,29 @@ func MustUnmarshalCycle(cdc *codec.Codec, value []byte) Cycle {
 func MustMarshalCycle(cdc *codec.Codec, cycle staking.Cycle) []byte {
 	return cdc.MustMarshalBinaryLengthPrefixed(cycle)
 }
+
+// For cycle display
+type CycleJSON struct {
+	PrimaryKey      []byte                      `json:"primary_key"`      // Hash(Num + ValidatorElects) - used as a primary key
+	Num             sdk.Int                     `json:"cycle_num"`        // Cycle number
+	ValidatorElects []ValidatorElectDisplayJSON `json:"validator_elects"` // Elects who have passed Proof of Determination
+	NumVotes        sdk.Int                     `json:"num_votes"`        // Number of votes for this cycle election
+	// Note: We cannot use []sdk.Validator here instead of []crypto.PubKey
+	// because it cannot be marshaled, since it isn't registered with amino
+	ConsPubKeysVoted []string  `json:"cons_pub_keys_voted"` // Consensus public keys (bech32) of validators that voted for this cycle
+	HasEnded         bool      `json:"has_ended"`           // Whether the cycle has gained majority vote or not
+	TimeEnded        time.Time `json:"time_ended"`          // Block time that represents the moment of gaining majority vote
+}
+
+func NewCycleJSON(pk []byte, num sdk.Int, valElects []ValidatorElectDisplayJSON,
+	consPubKeysVoted []string, hasEnded bool, timeEnded time.Time) CycleJSON {
+	return CycleJSON{
+		PrimaryKey:       pk,
+		Num:              num,
+		ValidatorElects:  valElects,
+		NumVotes:         sdk.OneInt(),
+		ConsPubKeysVoted: consPubKeysVoted,
+		HasEnded:         hasEnded,
+		TimeEnded:        timeEnded,
+	}
+}
