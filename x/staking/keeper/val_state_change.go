@@ -44,8 +44,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	protectedValidators := make([]types.Validator, 0)
 
 	// Check if election process is underway
-	//if !election.IsElectionFinished() {
-	if !IsElectionFinished(ctx) {
+	if !IsElectionFinished(ctx) && k.electionKeeper != nil {
 
 		// Get latest block
 		latestBlock := ctx.BlockHeader()
