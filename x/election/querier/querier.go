@@ -58,7 +58,7 @@ func queryCycles(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k kee
 		// Convert consensus public keys of voters to bech32 format
 		consPubKeysVoted := bech32ifyConsPubs(cycle.ConsPubKeysVoted)
 		cycleJSON := types.NewCycleJSON(cycle.PrimaryKey, cycle.Num, valElectsJSON,
-			consPubKeysVoted, cycle.HasEnded, cycle.TimeEnded)
+			consPubKeysVoted, cycle.HasMajorityVote, cycle.TimeProtectionStarted)
 		cyclesJSON = append(cyclesJSON, cycleJSON)
 	}
 

@@ -63,8 +63,8 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 		cycle = NewCycle(primaryKey, msg.CycleNum, msg.ElectedValidators, initiator.GetConsPubKey())
 	} else {
 		// Check if election for this cycle has ended
-		if cycle.HasEnded {
-			return ErrCycleElectionHasEnded(k.GetCodespace()).Result()
+		if cycle.HasMajorityVote {
+			return ErrCycleElectionHasMajority(k.GetCodespace()).Result()
 		}
 		// Check whether the initiator already voted for this request
 		for _, consPubKey := range cycle.ConsPubKeysVoted {
@@ -81,11 +81,11 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 
 	// Check whether more than 2/3 of currently active, bonded validators have voted for this cycle
 	if hasTwoThirdsMajority(k.GetLastBondedValidators(ctx), cycle.ConsPubKeysVoted, k.GetTotalPower(ctx).Int64()) {
-		cycle.HasEnded = true
+		cycle.HasMajorityVote = true
 
 		// Save latest block time as election time
 		latestBlock := ctx.BlockHeader()
-		cycle.TimeEnded = latestBlock.GetTime()
+		cycle.TimeProtectionStarted = latestBlock.GetTime()
 
 		// Increment number of max validators
 		err := k.IncMaxValidatorsNum(ctx, uint16(len(msg.ElectedValidators)))
@@ -97,7 +97,7 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 		err = k.AddInitialCoinsToElects(ctx, cycle.ValidatorElects)
 
 		// Log that this cycle has gained a majority vote
-		logger := ctx.Logger().With("module", "x/" + ModuleName)
+		logger := ctx.Logger().With("module", "x/"+ModuleName)
 		logger.Info(fmt.Sprintf("Cycle number %s has gained a majority vote.", cycle.Num.String()))
 		logger.Info(fmt.Sprintf(
 			"Validator elects from this cycle can now become validators, and will be protected for the next %d days.",
@@ -111,7 +111,7 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	tags := sdk.NewTags(
 		CycleNum, cycle.Num.String(),
 		NumVotes, cycle.NumVotes.String(),
-		IsFinished, strconv.FormatBool(cycle.HasEnded),
+		HasMajorityVote, strconv.FormatBool(cycle.HasMajorityVote),
 	)
 
 	return sdk.Result{

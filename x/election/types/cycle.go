@@ -19,9 +19,9 @@ type Cycle struct {
 	NumVotes        sdk.Int          `json:"num_votes"`        // Number of votes for this cycle election
 	// Note: We cannot use []sdk.Validator here instead of []crypto.PubKey
 	// because it cannot be marshaled, since it isn't registered with amino
-	ConsPubKeysVoted []crypto.PubKey `json:"cons_pub_keys_voted"` // Consensus public key of validators that voted for this cycle
-	HasEnded         bool            `json:"has_ended"`           // Whether the cycle has gained majority vote or not
-	TimeEnded        time.Time       `json:"time_ended"`          // Block time that represents the moment of gaining majority vote
+	ConsPubKeysVoted      []crypto.PubKey `json:"cons_pub_keys_voted"`     // Consensus public key of validators that voted for this cycle
+	HasMajorityVote       bool            `json:"has_majority_vote"`       // Whether the cycle has gained majority vote or not
+	TimeProtectionStarted time.Time       `json:"time_protection_started"` // Block time that represents the moment of gaining majority vote
 }
 
 func NewCycle(pk []byte, num sdk.Int, valElects []ValidatorElect, initiatorPubKey crypto.PubKey) Cycle {
@@ -31,7 +31,7 @@ func NewCycle(pk []byte, num sdk.Int, valElects []ValidatorElect, initiatorPubKe
 		ValidatorElects:  valElects,
 		NumVotes:         sdk.OneInt(),
 		ConsPubKeysVoted: []crypto.PubKey{initiatorPubKey},
-		HasEnded:         false,
+		HasMajorityVote:  false,
 	}
 }
 
@@ -54,8 +54,8 @@ func (c *Cycle) UpdateValidatorElects(elects []staking.ValidatorElect) {
 	}
 }
 
-func (c Cycle) GetTimeEnded() time.Time {
-	return c.TimeEnded
+func (c Cycle) GetTimeProtectionStarted() time.Time {
+	return c.TimeProtectionStarted
 }
 
 // Unmarshal election cycle from a store value
@@ -85,20 +85,20 @@ type CycleJSON struct {
 	NumVotes        sdk.Int                     `json:"num_votes"`        // Number of votes for this cycle election
 	// Note: We cannot use []sdk.Validator here instead of []crypto.PubKey
 	// because it cannot be marshaled, since it isn't registered with amino
-	ConsPubKeysVoted []string  `json:"cons_pub_keys_voted"` // Consensus public keys (bech32) of validators that voted for this cycle
-	HasEnded         bool      `json:"has_ended"`           // Whether the cycle has gained majority vote or not
-	TimeEnded        time.Time `json:"time_ended"`          // Block time that represents the moment of gaining majority vote
+	ConsPubKeysVoted      []string  `json:"cons_pub_keys_voted"`     // Consensus public keys (bech32) of validators that voted for this cycle
+	HasMajorityVote       bool      `json:"has_majority_vote"`       // Whether the cycle has gained majority vote or not
+	TimeProtectionStarted time.Time `json:"time_protection_started"` // Block time that represents the moment of gaining majority vote
 }
 
 func NewCycleJSON(pk []byte, num sdk.Int, valElects []ValidatorElectDisplayJSON,
-	consPubKeysVoted []string, hasEnded bool, timeEnded time.Time) CycleJSON {
+	consPubKeysVoted []string, hasMajorityVote bool, timeProtectionStarted time.Time) CycleJSON {
 	return CycleJSON{
-		PrimaryKey:       pk,
-		Num:              num,
-		ValidatorElects:  valElects,
-		NumVotes:         sdk.OneInt(),
-		ConsPubKeysVoted: consPubKeysVoted,
-		HasEnded:         hasEnded,
-		TimeEnded:        timeEnded,
+		PrimaryKey:            pk,
+		Num:                   num,
+		ValidatorElects:       valElects,
+		NumVotes:              sdk.OneInt(),
+		ConsPubKeysVoted:      consPubKeysVoted,
+		HasMajorityVote:       hasMajorityVote,
+		TimeProtectionStarted: timeProtectionStarted,
 	}
 }

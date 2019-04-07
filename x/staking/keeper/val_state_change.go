@@ -55,7 +55,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		for _, cycle := range finalizedCycles {
 
 			// Check if protection period for this cycle is still underway
-			timePassed := latestBlock.GetTime().Sub(cycle.GetTimeEnded())
+			timePassed := latestBlock.GetTime().Sub(cycle.GetTimeProtectionStarted())
 			if timePassed.Hours()/hoursInDay <= ProtectionPeriod {
 
 				// Did this cycle's state change?

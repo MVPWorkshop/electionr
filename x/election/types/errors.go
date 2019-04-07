@@ -65,8 +65,8 @@ func ErrElectionYearFinished(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidTime, "election year has passed")
 }
 
-func ErrCycleElectionHasEnded(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidTime, "election for this cycle has ended")
+func ErrCycleElectionHasMajority(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidTime, "election for this cycle has already gained a majority vote")
 }
 
 func ErrCycleNotFound(codespace sdk.CodespaceType) sdk.Error {

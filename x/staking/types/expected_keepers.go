@@ -35,7 +35,7 @@ type Cycle interface {
 	GetPrimaryKey() []byte
 	GetValidatorElects() []ValidatorElect
 	UpdateValidatorElects(elects []ValidatorElect)
-	GetTimeEnded() time.Time
+	GetTimeProtectionStarted() time.Time
 }
 
 // expected election keeper

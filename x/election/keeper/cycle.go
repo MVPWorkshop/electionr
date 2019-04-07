@@ -58,7 +58,7 @@ func (k Keeper) GetFinalizedCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle type
 
 	for ; iterator.Valid(); iterator.Next() {
 		cycle = types.MustUnmarshalCycle(k.cdc, iterator.Value())
-		if cycle.HasEnded {
+		if cycle.HasMajorityVote {
 			return cycle, true
 		}
 	}
@@ -75,7 +75,7 @@ func (k Keeper) GetAllFinalizedCycles(ctx sdk.Context) (cycles []staking.Cycle) 
 
 	for ; iterator.Valid(); iterator.Next() {
 		cycle := types.MustUnmarshalCycle(k.cdc, iterator.Value())
-		if cycle.HasEnded {
+		if cycle.HasMajorityVote {
 			cycles = append(cycles, &cycle)
 		}
 	}
