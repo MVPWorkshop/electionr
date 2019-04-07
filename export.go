@@ -31,7 +31,7 @@ func (app *ElectionrApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhi
 	// iterate to get the accounts
 	accounts := []GenesisAccount{}
 	appendAccount := func(acc auth.Account) (stop bool) {
-		account := NewGenesisAccountI(acc)
+		account := NewGenesisAccount(acc)
 		accounts = append(accounts, account)
 		return false
 	}
