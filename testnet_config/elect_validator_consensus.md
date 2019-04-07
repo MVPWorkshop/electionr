@@ -6,6 +6,7 @@ We just need to repeat the process using second operator keys.
 ### Generate insert validator elects transaction
 
 Send a request as an operator of the second node:
+
 ```
 curl http://127.0.0.1:1317/election/validator_elects \
 --header "Content-Type: application/json" \
@@ -27,8 +28,10 @@ curl http://127.0.0.1:1317/election/validator_elects \
 }
 EOF
 ```
+
 Transaction `tx1.json` is now ready for signing.  
 It should look something like this:
+
 ```
 {
     "type": "auth/StdTx",
@@ -88,6 +91,18 @@ Transaction is now broadcasted to other nodes, and it should achieve network con
 Validator elect has now been added successfully.
 
 You can make sure that election cycle has been completed by sending following HTTP GET request:
+
 ```
 curl http://127.0.0.1:1317/election/cycle/1 --header "Content-Type: application/json"
 ```
+
+In order to start validating new blocks, newly elected validator should run the following command to stake his coins:
+
+```
+electionrcli tx staking create-validator --from operator2 --amount 1000000stakecoin --moniker node2 \
+--pubkey cosmosvalconspub1zcjduepqw29jdgktm22u5fajnwdatf6acfa9af4g9lc6svm6an5ltjns4vwqjjqflu \
+--commission-max-change-rate 0 --commission-max-rate 0 --commission-rate 0 --min-self-delegation 1 \
+--chain-id electionr-chain
+```
+
+Newly elected validator has now entered [protection period](./validator_protection.md).
