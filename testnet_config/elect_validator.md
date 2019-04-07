@@ -19,7 +19,7 @@ curl http://127.0.0.1:1317/election/validator_elects \
 {
     "base_req": {
         "from": "cosmos1ge5t2s0k78y4zws2gpv5wsa0dw83fmflcpw0qn",
-        "chain_id": "legaler-chain"
+        "chain_id": "electionr-chain"
     },
     "cycle_number": "1",
     "elected_validators": [
