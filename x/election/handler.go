@@ -46,12 +46,12 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 	if !initiator.GetStatus().Equal(sdk.Bonded) {
 		return ErrValidatorNotBonded(k.GetCodespace()).Result()
 	}
-	// Check whether there is already finished cycle with this number
+	// Check whether there is cycle that has majority vote with this number
 	// Note: This means that validators who didn't get to vote for this cycle
 	// but it has been elected nonetheless will get the error message, but their
 	// vote wouldn't change anything anyway
-	if _, found := k.GetFinalizedCycle(ctx, msg.CycleNum); found {
-		return ErrCycleFinalized(k.GetCodespace()).Result()
+	if _, found := k.GetVotedCycle(ctx, msg.CycleNum); found {
+		return ErrCycleMajorityVote(k.GetCodespace()).Result()
 	}
 
 	// Calculate primary key
@@ -88,13 +88,10 @@ func handleMsgInsertValidatorElects(ctx sdk.Context, msg MsgInsertValidatorElect
 		cycle.TimeProtectionStarted = latestBlock.GetTime()
 
 		// Increment number of max validators
-		err := k.IncMaxValidatorsNum(ctx, uint16(len(msg.ElectedValidators)))
-		if err != nil {
-			return err.Result()
-		}
+		k.IncMaxValidatorsNum(ctx, uint16(len(msg.ElectedValidators)))
 
 		// Add enough tokens to each elect (from this cycle) for him to obtain enough starting power
-		err = k.AddInitialCoinsToElects(ctx, cycle.ValidatorElects)
+		k.AddInitialCoinsToElects(ctx, cycle.ValidatorElects)
 
 		// Log that this cycle has gained a majority vote
 		logger := ctx.Logger().With("module", "x/"+ModuleName)

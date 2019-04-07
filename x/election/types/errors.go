@@ -77,6 +77,6 @@ func ErrCycleNumInvalid(codespace sdk.CodespaceType) sdk.Error {
 	return sdk.NewError(codespace, CodeInvalidInput, "cycle number must be a positive integer")
 }
 
-func ErrCycleFinalized(codespace sdk.CodespaceType) sdk.Error {
-	return sdk.NewError(codespace, CodeInvalidCycle, "cycle with this number has already been finalized")
+func ErrCycleMajorityVote(codespace sdk.CodespaceType) sdk.Error {
+	return sdk.NewError(codespace, CodeInvalidCycle, "cycle with this number already has a majority vote")
 }

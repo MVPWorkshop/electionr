@@ -43,7 +43,7 @@ var (
 	ErrCycleElectionHasMajority = types.ErrCycleElectionHasMajority
 	ErrCycleNumInvalid          = types.ErrCycleNumInvalid
 	ErrCycleNumberOutOfBounds   = types.ErrCycleNumberOutOfBounds
-	ErrCycleFinalized           = types.ErrCycleFinalized
+	ErrCycleMajorityVote        = types.ErrCycleMajorityVote
 
 	CycleNum        = tags.CycleNum
 	NumVotes        = tags.NumVotes

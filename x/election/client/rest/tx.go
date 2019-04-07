@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 
@@ -53,6 +54,11 @@ func postInsertValidatorElectsHandlerFn(cdc *codec.Codec, cliCtx context.CLICont
 		for _, elect := range req.ElectedValidators {
 			consPubKey, err := sdk.GetConsPubKeyBech32(elect.ConsPubKey)
 			if err != nil {
+				rest.WriteErrorResponse(
+					writer,
+					http.StatusBadRequest,
+					fmt.Sprintf("invalid cons_pub_key of validator elect with operator address %s", elect.OperatorAddr.String()),
+				)
 				return
 			}
 			valElect := election.NewValidatorElect(elect.OperatorAddr, consPubKey, elect.Place)

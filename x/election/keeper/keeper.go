@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/MVPWorkshop/electionr/x/election/types"
 	"github.com/MVPWorkshop/electionr/x/staking"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -49,14 +51,13 @@ func (k Keeper) GetTotalPower(ctx sdk.Context) sdk.Int {
 }
 
 // Increments maximum number of validators by newValidatorNum
-func (k Keeper) IncMaxValidatorsNum(ctx sdk.Context, newValidatorNum uint16) sdk.Error {
-	// Check if new validators number is lower than max validators per cycle
+func (k Keeper) IncMaxValidatorsNum(ctx sdk.Context, newValidatorNum uint16) {
+	// No more than max validators per cycle should be added per cycle
 	if newValidatorNum > types.MaxValidatorElectsPerCycle {
-		return types.ErrValidatorElectsOutOfBounds(k.codespace, types.MaxValidatorElectsPerCycle)
+		// Unexpected behaviour
+		panic(fmt.Sprintf("validator elects shouldn't be larger than %d", types.MaxValidatorElectsPerCycle))
 	}
 	params := k.stakingKeeper.GetParams(ctx)
 	params.MaxValidators += newValidatorNum
 	k.stakingKeeper.SetParams(ctx, params)
-
-	return nil
 }

@@ -51,7 +51,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 		latestBlock := ctx.BlockHeader()
 
 		// Determine all cycles whose validator elects should be protected
-		finalizedCycles := k.electionKeeper.GetAllFinalizedCycles(ctx)
+		finalizedCycles := k.electionKeeper.GetAllVotedCycles(ctx)
 		for _, cycle := range finalizedCycles {
 
 			// Check if protection period for this cycle is still underway
