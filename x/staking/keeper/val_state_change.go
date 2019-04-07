@@ -15,7 +15,7 @@ import (
 // They are protected since it would be unfair
 // if someone could push them out immediately
 // after they have passed proof of determination.
-const protectionPeriod = 30
+const ProtectionPeriod = 30
 
 // Apply and return accumulated updates to the bonded validator set. Also,
 // * Updates the active valset as keyed by LastValidatorPowerKey.
@@ -44,19 +44,18 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	protectedValidators := make([]types.Validator, 0)
 
 	// Check if election process is underway
-	//if !election.IsElectionFinished() {
-	if !IsElectionFinished(ctx) {
+	if !IsElectionFinished(ctx) && k.electionKeeper != nil {
 
 		// Get latest block
 		latestBlock := ctx.BlockHeader()
 
 		// Determine all cycles whose validator elects should be protected
-		finalizedCycles := k.electionKeeper.GetAllFinalizedCycles(ctx)
+		finalizedCycles := k.electionKeeper.GetAllVotedCycles(ctx)
 		for _, cycle := range finalizedCycles {
 
 			// Check if protection period for this cycle is still underway
-			timePassed := latestBlock.GetTime().Sub(cycle.GetTimeEnded())
-			if timePassed.Hours()/hoursInDay <= protectionPeriod {
+			timePassed := latestBlock.GetTime().Sub(cycle.GetTimeProtectionStarted())
+			if timePassed.Hours()/hoursInDay <= ProtectionPeriod {
 
 				// Did this cycle's state change?
 				hasUpdated := false

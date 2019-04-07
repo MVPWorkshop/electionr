@@ -10,6 +10,7 @@ The more validator stakes, higher his voting power.
 First we need to generate insert validator elects transaction which we can sign in order to broadcast it to Tendermint.  
 We can do so by sending HTTP POST request to Electionr REST server.  
 Lets first send a request as an operator of the first node:
+
 ```
 curl http://127.0.0.1:1317/election/validator_elects \
 --header "Content-Type: application/json" \
@@ -31,8 +32,10 @@ curl http://127.0.0.1:1317/election/validator_elects \
 }
 EOF
 ```
+
 Transaction `tx.json` is now ready for signing.  
 It should look something like this:
+
 ```
 {
     "type": "auth/StdTx",

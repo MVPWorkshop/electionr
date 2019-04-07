@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	ModuleName   = types.ModuleName
 	RouterKey    = types.RouterKey
 	StoreKey     = types.StoreKey
 	QuerierRoute = types.QuerierRoute
@@ -36,15 +37,15 @@ var (
 
 	RegisterCodec = types.RegisterCodec
 
-	ErrValidatorNotBonded     = types.ErrValidatorNotBonded
-	ErrValidatorAlreadyVoted  = types.ErrValidatorAlreadyVoted
-	ErrElectionYearFinished   = types.ErrElectionYearFinished
-	ErrCycleElectionHasEnded  = types.ErrCycleElectionHasEnded
-	ErrCycleNumInvalid        = types.ErrCycleNumInvalid
-	ErrCycleNumberOutOfBounds = types.ErrCycleNumberOutOfBounds
-	ErrCycleFinalized         = types.ErrCycleFinalized
+	ErrValidatorNotBonded       = types.ErrValidatorNotBonded
+	ErrValidatorAlreadyVoted    = types.ErrValidatorAlreadyVoted
+	ErrElectionYearFinished     = types.ErrElectionYearFinished
+	ErrCycleElectionHasMajority = types.ErrCycleElectionHasMajority
+	ErrCycleNumInvalid          = types.ErrCycleNumInvalid
+	ErrCycleNumberOutOfBounds   = types.ErrCycleNumberOutOfBounds
+	ErrCycleMajorityVote        = types.ErrCycleMajorityVote
 
-	CycleNum   = tags.CycleNum
-	NumVotes   = tags.NumVotes
-	IsFinished = tags.IsFinished
+	CycleNum        = tags.CycleNum
+	NumVotes        = tags.NumVotes
+	HasMajorityVote = tags.HasMajorityVote
 )

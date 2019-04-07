@@ -36,6 +36,16 @@
           }
         ],
         "account_number": "2"
+      },
+      {
+        "address": "cosmos1j9l0ay3k6dz5nuyyhulxfsgqwjw0d8wjllukkj",
+        "coins": [
+          {
+            "denom": "stakecoin",
+            "amount": "4000000"
+          }
+        ],
+        "account_number": "3"
       }
     ],
     "auth": {
@@ -53,7 +63,7 @@
     },
     "staking": {
       "pool": {
-        "not_bonded_tokens": "11000000",
+        "not_bonded_tokens": "15000000",
         "bonded_tokens": "0"
       },
       "params": {

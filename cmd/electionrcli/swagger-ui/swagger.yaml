@@ -2241,13 +2241,13 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/ConsPubKey"
-      has_ended:
+      has_majority_vote:
         type: boolean
-        decription: Whether the cycle has ended (by achieving majority for example)
+        decription: Whether the cycle has achieved majority vote
         example: false
-      time_ended:
+      time_protection_started:
         type: string
-        description: Time of achieving majority
+        description: Time of achieving majority and starting protection period for this cycle
         example: "2019-03-01T18:33:21Z"
   ElectedValidator:
     type: object

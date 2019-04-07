@@ -31,7 +31,7 @@ func cycleInfoHandlerFn(cliCtx context.CLIContext, cdc *codec.Codec) http.Handle
 			return
 		}
 		// Check if cycle number is outside of bounds
-		if cycleNumInt.LTE(sdk.ZeroInt()) || cycleNumInt.GT(sdk.NewInt(election.MaxCycles)) {
+		if cycleNumInt.LT(sdk.ZeroInt()) || cycleNumInt.GT(sdk.NewInt(election.MaxCycles)) {
 			rest.WriteErrorResponse(
 				writer,
 				http.StatusBadRequest,

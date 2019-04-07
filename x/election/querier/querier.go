@@ -50,7 +50,19 @@ func queryCycles(ctx sdk.Context, cdc *codec.Codec, req abci.RequestQuery, k kee
 	// Get cycles from state
 	cycles := k.GetCyclesByCycleNum(ctx, params.CycleNum)
 
-	res, errRes = codec.MarshalJSONIndent(cdc, cycles)
+	// Format them for display
+	cyclesJSON := make([]types.CycleJSON, 0, len(cycles))
+	for _, cycle := range cycles {
+		// Convert consensus public keys of validator elects to bech32 format
+		valElectsJSON := convertValElectsConsPubKeys(cycle.ValidatorElects)
+		// Convert consensus public keys of voters to bech32 format
+		consPubKeysVoted := bech32ifyConsPubs(cycle.ConsPubKeysVoted)
+		cycleJSON := types.NewCycleJSON(cycle.PrimaryKey, cycle.Num, valElectsJSON,
+			consPubKeysVoted, cycle.HasMajorityVote, cycle.TimeProtectionStarted)
+		cyclesJSON = append(cyclesJSON, cycleJSON)
+	}
+
+	res, errRes = codec.MarshalJSONIndent(cdc, cyclesJSON)
 	if errRes != nil {
 		return nil, sdk.ErrInternal(sdk.AppendMsgToErr("could not marshal result to JSON", errRes.Error()))
 	}

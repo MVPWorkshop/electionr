@@ -312,22 +312,6 @@ func (app *ElectionrApp) initFromGenesisState(ctx sdk.Context, genesisState Gene
 		panic(err) // TODO find a way to do this w/o panics
 	}
 
-	if len(genesisState.GenTxs) > 0 {
-		for _, genTx := range genesisState.GenTxs {
-			var tx auth.StdTx
-			err = app.cdc.UnmarshalJSON(genTx, &tx)
-			if err != nil {
-				panic(err)
-			}
-			bz := app.cdc.MustMarshalBinaryLengthPrefixed(tx)
-			res := app.BaseApp.DeliverTx(bz)
-			if !res.IsOK() {
-				panic(res.Log)
-			}
-		}
-
-		validators = app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
-	}
 	return validators
 }
 

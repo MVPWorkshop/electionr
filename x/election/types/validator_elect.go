@@ -41,7 +41,7 @@ func (v *ValidatorElect) LeaveProtection() {
 // Since public key cannot be put in JSON we need to convert it to/from string
 type ValidatorElectJSON struct {
 	OperatorAddr sdk.ValAddress `json:"operator_addr"` // Address of the validator's operator
-	ConsPubKey   string         `json:"cons_pub_key"`  // Consensus public key of the validator
+	ConsPubKey   string         `json:"cons_pub_key"`  // Consensus public key of the validator (bech32 format)
 	Place        sdk.Int        `json:"place"`         // Place that he achieved in the PoD "race"
 }
 
@@ -50,5 +50,22 @@ func NewValidatorElectJSON(operAddr sdk.ValAddress, consPubKey string, place sdk
 		OperatorAddr: operAddr,
 		ConsPubKey:   consPubKey,
 		Place:        place,
+	}
+}
+
+// Validator elect JSON for output
+type ValidatorElectDisplayJSON struct {
+	OperatorAddr sdk.ValAddress `json:"operator_addr"` // Address of the validator's operator
+	ConsPubKey   string         `json:"cons_pub_key"`  // Consensus public key of the validator (bech32 format)
+	Place        sdk.Int        `json:"place"`         // Place that he achieved in the PoD "race"
+	Left         bool           `json:"left"`          // If elect decided to unbond within protection period
+}
+
+func NewValidatorElectDisplayJSON(operAddr sdk.ValAddress, consPubKey string, place sdk.Int, left bool) ValidatorElectDisplayJSON {
+	return ValidatorElectDisplayJSON{
+		OperatorAddr: operAddr,
+		ConsPubKey:   consPubKey,
+		Place:        place,
+		Left:         left,
 	}
 }

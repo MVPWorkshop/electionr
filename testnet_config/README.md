@@ -13,17 +13,14 @@ Copy nodes configurations to your home directory:
 ### Start Electionr blockchain
 
 You can start Electionr blockchain by running following daemons:
-
 - `electionrd start --home ~/.electionrd/node0`
 - `electionrd start --home ~/.electionrd/node1`
 - `electionrd start --home ~/.electionrd/node2`
-
 This should result in empty blocks being minted.
 
 ### Start REST server
 
 In order to start REST server run these commands:
-
 - `make update_api_docs` (from the root of the repo)
 - `electionrcli rest-server --chain-id electionr-chain`
 

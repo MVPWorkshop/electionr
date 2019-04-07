@@ -48,8 +48,8 @@ func (k Keeper) GetCyclesByCycleNum(ctx sdk.Context, cycleNum sdk.Int) (cycles [
 	return cycles
 }
 
-// Get finalized cycle
-func (k Keeper) GetFinalizedCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle types.Cycle, found bool) {
+// Get cycle that has gained majority vote
+func (k Keeper) GetVotedCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle types.Cycle, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Get all cycles
@@ -58,7 +58,7 @@ func (k Keeper) GetFinalizedCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle type
 
 	for ; iterator.Valid(); iterator.Next() {
 		cycle = types.MustUnmarshalCycle(k.cdc, iterator.Value())
-		if cycle.HasEnded {
+		if cycle.HasMajorityVote {
 			return cycle, true
 		}
 	}
@@ -66,7 +66,8 @@ func (k Keeper) GetFinalizedCycle(ctx sdk.Context, cycleNum sdk.Int) (cycle type
 	return cycle, false
 }
 
-func (k Keeper) GetAllFinalizedCycles(ctx sdk.Context) (cycles []staking.Cycle) {
+// Get cycles that have gained majority vote
+func (k Keeper) GetAllVotedCycles(ctx sdk.Context) (cycles []staking.Cycle) {
 	store := ctx.KVStore(k.storeKey)
 
 	// Get all cycles
@@ -75,7 +76,7 @@ func (k Keeper) GetAllFinalizedCycles(ctx sdk.Context) (cycles []staking.Cycle) 
 
 	for ; iterator.Valid(); iterator.Next() {
 		cycle := types.MustUnmarshalCycle(k.cdc, iterator.Value())
-		if cycle.HasEnded {
+		if cycle.HasMajorityVote {
 			cycles = append(cycles, &cycle)
 		}
 	}
@@ -84,7 +85,7 @@ func (k Keeper) GetAllFinalizedCycles(ctx sdk.Context) (cycles []staking.Cycle) 
 }
 
 // Adds coins to validator elects (and inflate supply) by saving them in state
-func (k Keeper) AddInitialCoinsToElects(ctx sdk.Context, elects []types.ValidatorElect) sdk.Error {
+func (k Keeper) AddInitialCoinsToElects(ctx sdk.Context, elects []types.ValidatorElect) {
 	// Coins to add in order to gain initial power
 	amount := sdk.TokensFromTendermintPower(int64(electStartingPower))
 	coins := sdk.Coins{
@@ -97,12 +98,12 @@ func (k Keeper) AddInitialCoinsToElects(ctx sdk.Context, elects []types.Validato
 	for _, elect := range elects {
 		_, _, err := k.bankKeeper.AddCoins(ctx, sdk.AccAddress(elect.OperatorAddr), coins)
 		if err != nil {
-			return err
+			// Shouldn't happen
+			panic(err.Error())
 		}
 		totalAmount = totalAmount.Add(amount)
 	}
 
 	// Inflate coin supply
 	k.stakingKeeper.InflateSupply(ctx, totalAmount)
-	return nil
 }
