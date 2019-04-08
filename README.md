@@ -27,14 +27,14 @@ It is implemented on top of [Tendermint](https://github.com/tendermint/tendermin
 
 ### Authors
 
--   Vuksan Simunović (https://mvpworkshop.co)
--	Filip Petrović (https://mvpworkshop.co)
-- 	Tomislav Ranđić (https://mvpworkshop.co)
+- Vuksan Simunović (https://mvpworkshop.co)
+- Filip Petrović (https://mvpworkshop.co)
+- Tomislav Ranđić (https://mvpworkshop.co)
 
 ### Contributors
 
--	Mališa Pušonja (https://mvpworkshop.co)
+- Mališa Pušonja (https://mvpworkshop.co)
 
 ### Acknowledgments
 
--	Legaler (https://www.legaler.com/), for the concept of Proof of Determination (PoD) concept 
+- Legaler (https://www.legaler.com/), for the concept of Proof of Determination (PoD) concept 
