@@ -6,7 +6,7 @@ In order to solve for this during the first year, validator nodes are elected us
 
 Once the minimum number of validators have been elected, they begin the network. New validators are also added in a permissionless way, until the maximum is achieved. PoS tokens are also distributed into a liquidity pool that allows anyone to acquire them. Once the network has been bootstrapped, the election and bridge contracts can be decommissioned safely.
 
-This process is described in [Legaler Whitepaper](https://github.com/Legaler/Whitepapers/blob/master/Proof%20of%20Determination.md).
+This process was first described and used in [Legaler Whitepaper](https://github.com/Legaler/Whitepapers/blob/master/Proof%20of%20Determination.md).
 
 Electionr is a custom blockchain implementation written in Golang.  
 It is implemented on top of [Tendermint](https://github.com/tendermint/tendermint) by extending [Cosmos SDK](https://github.com/cosmos/cosmos-sdk).
