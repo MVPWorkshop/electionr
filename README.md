@@ -30,13 +30,13 @@ It is implemented on top of [Tendermint](https://github.com/tendermint/tendermin
 
 ### Authors
 
-- [Vuksan Simunović](), Software Engineer @ [MVP Workshop](https://mvpworkshop.co)
-- [Filip Petrović](), Software Engineer @ [MVP Workshop](https://mvpworkshop.co)
-- [Tomislav Ranđić](), Engineering Director @ [MVP Workshop](https://mvpworkshop.co)
+- [Vuksan Simunović](https://www.linkedin.com/in/vuksan-simunovi%C4%87-bb39286a/), Software Engineer @ [MVP Workshop](https://mvpworkshop.co)
+- [Filip Petrović](https://www.linkedin.com/in/filip-petrovi%C4%87-160076129/), Software Engineer @ [MVP Workshop](https://mvpworkshop.co)
+- [Tomislav Ranđić](https://www.linkedin.com/in/tomislav-randjic-2601b4b/), Engineering Director @ [MVP Workshop](https://mvpworkshop.co)
 
 ### Contributors
 
-- [Mališa Pušonja](), CTO @ [MVP Workshop](https://mvpworkshop.co)
+- [Mališa Pušonja](https://www.linkedin.com/in/malisapusonja/), CTO @ [MVP Workshop](https://mvpworkshop.co)
 
 ### Acknowledgments
 
