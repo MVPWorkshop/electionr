@@ -25,6 +25,8 @@ It is implemented on top of [Tendermint](https://github.com/tendermint/tendermin
 
 ### Versioning
 
+- We use [SemVer](https://semver.org) for versioning of all our open source projects. 
+
 ### Authors
 
 - Vuksan Simunović (https://mvpworkshop.co)
