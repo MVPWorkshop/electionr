@@ -37,4 +37,4 @@ It is implemented on top of [Tendermint](https://github.com/tendermint/tendermin
 
 ### Acknowledgments
 
-- Legaler (https://www.legaler.com/), for the concept of Proof of Determination (PoD) concept 
+- Legaler (https://www.legaler.com/), for the Proof of Determination (PoD) concept.
