@@ -38,6 +38,7 @@ It is implemented on top of [Tendermint](https://github.com/tendermint/tendermin
 - [Vuksan Simunović](https://www.linkedin.com/in/vuksan-simunovi%C4%87-bb39286a/), Software Engineer @ [MVP Workshop](https://mvpworkshop.co)
 - [Filip Petrović](https://www.linkedin.com/in/filip-petrovi%C4%87-160076129/), Software Engineer @ [MVP Workshop](https://mvpworkshop.co)
 - [Tomislav Ranđić](https://www.linkedin.com/in/tomislav-randjic-2601b4b/), Engineering Director @ [MVP Workshop](https://mvpworkshop.co)
+- [Predrag Rogić](https://www.linkedin.com/in/predragrogic/), Product Director @ [MVP Workshop](https://mvpworkshop.co)
 
 ### Contributors
 
